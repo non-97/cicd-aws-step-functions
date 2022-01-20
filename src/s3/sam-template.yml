@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sfn-sam
+
+  Sample SAM Template for sfn-sam
+
+Parameters:
+  StateMachineName:
+    Description: Please type the Step Functions State Machine Name.
+    Type: String
+    Default: 'sfn-sam-app-statemachine'
+  StackIdAfterStackName:
+    Description: Please type the Stack ID after Stack Name.
+    Type: String
+    Default: 'xxxxxxx'
+  Cron:
+    Description: Please type the Cron.
+    Type: String
+    Default: 'cron(0 15 * * ? *)'
+  EventPattern:
+    Description: Please type the EventPattern.
+    Type: String
+    Default: '{
+      "source": ["aws.states"],
+      "detail-type": ["Step Functions Execution Status Change"],
+      "detail": {
+        "status": ["SUCCEEDED"],
+        "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
+      }
+    }'
+  TargetEventBusArnAfterExecution:
+    Description: Please type the target event bus arn after execution.
+    Type: String
+    Default: 'arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default'
+
+Conditions:
+  IsCron: !Not 
+    - !Equals
+      - !Sub ${Cron}
+      - "null"
+  IsEventPattern: !Not 
+    - !Equals
+      - !Sub ${EventPattern}
+      - "null"
+  IsTargetEventBusArnAfterExecution: !Not 
+    - !Equals
+      - !Sub ${TargetEventBusArnAfterExecution}
+      - "null"
+
+Resources:
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${StateMachineName}
+      DefinitionUri: statemachine/SFnStateWorkFlow.asl.json
+      Role: !GetAtt StateMachineRole.Arn
+      Logging:
+        Level: ALL
+        IncludeExecutionData: True
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName : !Sub '/aws/vendedlogs/states/${StateMachineName}-${StackIdAfterStackName}-Logs'
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  ScheduledRule: 
+    Condition: IsCron
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: ScheduledRule
+      ScheduleExpression: !Sub ${Cron}
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref StateMachine
+          Id: !GetAtt StateMachine.Name
+          RoleArn: !GetAtt ExecuteStateMachineRole.Arn
+
+  EventPatternRule: 
+    Condition: IsEventPattern
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: EventPatternRule
+      EventPattern: !Sub ${EventPattern}
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref StateMachine
+          Id: !GetAtt StateMachine.Name
+          RoleArn: !GetAtt ExecuteStateMachineRole.Arn
+
+  ExecuteStateMachineRole: 
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - events.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: /
+        Policies:
+          - PolicyName: states_StartExecution
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action: 
+                    - states:StartExecution
+                  Resource: 
+                    - !Ref StateMachine
+
+  TargetEventBusArnAfterExecutionRule: 
+    Condition: IsTargetEventBusArnAfterExecution
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: TargetEventBusArnAfterExecutionRule
+      EventPattern: {
+        "source": ["aws.states"],
+        "detail-type": ["Step Functions Execution Status Change"],
+        "detail": {
+          "status": ["SUCCEEDED"],
+          "stateMachineArn": [!Ref StateMachine]
+        }
+      }
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref TargetEventBusArnAfterExecution
+          Id: TargetEventBusArnAfterExecution
+          RoleArn: !GetAtt InvokeEventBusRole.Arn
+
+  InvokeEventBusRole: 
+      Type: AWS::IAM::Role
+      Condition: IsTargetEventBusArnAfterExecution
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - events.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: /
+        Policies:
+          - PolicyName: InvokeEventBus
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action: 
+                    - events:PutEvents
+                  Resource: 
+                    - !Ref TargetEventBusArnAfterExecution

@@ -1,21 +1,67 @@
 #!/usr/bin/env node
-import 'source-map-support/register';
-import * as cdk from 'aws-cdk-lib';
-import { CicdAwsStepFunctionsStack } from '../lib/cicd-aws-step-functions-stack';
+import "source-map-support/register";
+import "dotenv/config";
+import * as cdk from "aws-cdk-lib";
+import { Ec2InstancesStack } from "../lib/ec2-instances-stack";
+import { SfnTemplateBucketStack } from "../lib/sfn-template-bucket-stack";
+import { ArtifactBucketStack } from "../lib/artifact-bucket-stack";
+import { RoleStack } from "../lib/role-stack";
+import { NoticeEventsFunctionStack } from "../lib/notice-events-function-stack";
+import { WorkflowSupportFunctionStack } from "../lib/workflow-support-function-stack";
+import { CicdStack } from "../lib/cicd-stack";
 
 const app = new cdk.App();
-new CicdAwsStepFunctionsStack(app, 'CicdAwsStepFunctionsStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+if (
+  typeof process.env.APP_TEAM_WEBHOOK_URL == "undefined" ||
+  typeof process.env.APP_MANAGER_WEBHOOK_URL == "undefined" ||
+  typeof process.env.INFRA_TEAM_WEBHOOK_URL == "undefined" ||
+  typeof process.env.JUMP_ACCOUNT == "undefined"
+) {
+  console.error(`
+    There is not enough input in the .env file.
+    Please enter a value in the .env file.`);
+  process.exit(1);
+}
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+const appTeamWebhookUrl = process.env.APP_TEAM_WEBHOOK_URL;
+const appManagerWebhookUrl = process.env.APP_MANAGER_WEBHOOK_URL;
+const infraTeamWebhookUrl = process.env.INFRA_TEAM_WEBHOOK_URL;
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const sfnTemplateBucketStack = new SfnTemplateBucketStack(
+  app,
+  "SfnTemplateBucketStack"
+);
+const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
+
+// new Ec2InstancesStack(app, "Ec2InstancesStack");
+
+const roleStack = new RoleStack(app, "RoleStack", {
+  jumpAccount: process.env.JUMP_ACCOUNT,
+});
+
+const noticeEventsFunctionStack = new NoticeEventsFunctionStack(
+  app,
+  "NoticeEventsFunctionStack"
+);
+// new WorkflowSupportFunctionStack(app, "WorkflowSupportFunctionStack");
+
+new CicdStack(app, "StateMachine001CicdStack", {
+  jobnetId: "StateMachine001",
+  artifactBucket: artifactBucketStack.artifactBucket,
+  sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
+  sfnTemplateBucketGitTemplateKey: "git-template.zip",
+  sfnTemplateBucketSamTemplateKey: "sam-template.yml",
+  appTeamWebhookUrl: appTeamWebhookUrl,
+  appManagerWebhookUrl: appManagerWebhookUrl,
+  infraTeamWebhookUrl: infraTeamWebhookUrl,
+  mainBranchApprovalRuleTemplate: roleStack.mainBranchApprovalRuleTemplate,
+  developBranchApprovalRuleTemplate:
+    roleStack.developBranchApprovalRuleTemplate,
+  noticePullRequestEventsFunction:
+    noticeEventsFunctionStack.noticePullRequestEventsFunction,
+  noticeCodeBuildEventsFunction:
+    noticeEventsFunctionStack.noticeCodeBuildEventsFunction,
+  noticeExecuteStateMachineEventsFunction:
+    noticeEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
 });
