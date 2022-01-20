@@ -145,7 +145,7 @@ export const handler = async (
 
   const durationSecounds =
     startDate && stopDate
-      ? Math.round((startDate.getTime() - stopDate.getTime()) / 1000)
+      ? Math.round((stopDate.getTime() - startDate.getTime()) / 1000)
       : null;
 
   const consoleUrl = `https://console.aws.amazon.com/states/home?region=${region}#/executions/details/${executionArn}`;

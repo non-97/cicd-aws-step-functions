@@ -34,7 +34,7 @@ const sfnTemplateBucketStack = new SfnTemplateBucketStack(
 );
 const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
 
-// new Ec2InstancesStack(app, "Ec2InstancesStack");
+new Ec2InstancesStack(app, "Ec2InstancesStack");
 
 const roleStack = new RoleStack(app, "RoleStack", {
   jumpAccount: process.env.JUMP_ACCOUNT,
@@ -44,7 +44,8 @@ const noticeEventsFunctionStack = new NoticeEventsFunctionStack(
   app,
   "NoticeEventsFunctionStack"
 );
-// new WorkflowSupportFunctionStack(app, "WorkflowSupportFunctionStack");
+
+new WorkflowSupportFunctionStack(app, "WorkflowSupportFunctionStack");
 
 new CicdStack(app, "StateMachine001CicdStack", {
   jobnetId: "StateMachine001",
