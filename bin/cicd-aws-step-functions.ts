@@ -6,6 +6,7 @@ import { Ec2InstancesStack } from "../lib/ec2-instances-stack";
 import { SfnTemplateBucketStack } from "../lib/sfn-template-bucket-stack";
 import { ArtifactBucketStack } from "../lib/artifact-bucket-stack";
 import { RoleStack } from "../lib/role-stack";
+import { EventBusStack } from "../lib/event-bus-stack";
 import { NoticeEventsFunctionStack } from "../lib/notice-events-function-stack";
 import { WorkflowSupportFunctionStack } from "../lib/workflow-support-function-stack";
 import { CicdStack } from "../lib/cicd-stack";
@@ -34,10 +35,14 @@ const sfnTemplateBucketStack = new SfnTemplateBucketStack(
 );
 const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
 
-new Ec2InstancesStack(app, "Ec2InstancesStack");
+// new Ec2InstancesStack(app, "Ec2InstancesStack");
 
 const roleStack = new RoleStack(app, "RoleStack", {
   jumpAccount: process.env.JUMP_ACCOUNT,
+});
+
+new EventBusStack(app, "EventBusStack", {
+  sourceAccounts: process.env.SOURCE_ACCOUNTS,
 });
 
 const noticeEventsFunctionStack = new NoticeEventsFunctionStack(
