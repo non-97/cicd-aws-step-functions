@@ -12,7 +12,7 @@ export class SfnTemplateBucketStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Create S3 Bucket for git template
+    // S3 buckets to store AWS Step Function template files and CodeBuild shell scripts
     this.sfnTemplateBucket = new s3.Bucket(this, "SfnTemplateBucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: new s3.BlockPublicAccess({
@@ -23,7 +23,7 @@ export class SfnTemplateBucketStack extends Stack {
       }),
     });
 
-    // Upload the template file for the AWS Step Function & CodeBuild Shellto the S3 bucket.
+    // Deploy AWS Step Function template files and CodeBuild shell scripts to S3 bucket
     new s3deploy.BucketDeployment(this, "DeployFilesToSfnTemplateBucket", {
       sources: [
         s3deploy.Source.asset("./src/codeCommit", { exclude: [".DS_Store"] }),

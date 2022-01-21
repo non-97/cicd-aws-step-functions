@@ -39,15 +39,17 @@ export class CicdStack extends Stack {
   constructor(scope: Construct, id: string, props: CicdStackProps) {
     super(scope, id, props);
 
-    // Get the string after the stack name in the stack id to append to the end of the Log Group name to make it unique.
+    // Get the string after the stack name in the stack id to append to the end of the Log Group name to make it unique
     const stackIdAfterStackName = Fn.select(2, Fn.split("/", this.stackId));
 
-    // Create CloudWatch Logs for CodeBuild Logs
+    // CloudWatch Logs for CodeBuild Logs
     const codeBuildLogGroup = new logs.LogGroup(this, "CodeBuildLogGroup", {
       logGroupName: `/aws/vendedlogs/codebuild/${props.stateMachineName}-${stackIdAfterStackName}-Logs`,
       retention: logs.RetentionDays.TWO_WEEKS,
     });
 
+    // CodeCommit repository
+    // Upload files stored in an S3 bucket
     const cfnRepository = new codecommit.CfnRepository(this, "CfnRepository", {
       repositoryName: props.stateMachineName,
       code: {
@@ -58,14 +60,19 @@ export class CicdStack extends Stack {
         },
       },
     });
+
+    // Don't delete the repository when you delete the stack
     cfnRepository.cfnOptions.deletionPolicy = CfnDeletionPolicy.RETAIN;
 
+    // Redefining the repository with High Level Construct
     const repository = codecommit.Repository.fromRepositoryName(
       this,
       "Repository",
       cfnRepository.attrName
     ) as codecommit.Repository;
 
+    // CodeBuild　project
+    // Deploy a StateMachine with AWS SAM
     const project = new codebuild.PipelineProject(this, "project", {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: "0.2",
@@ -108,6 +115,7 @@ export class CicdStack extends Stack {
       },
     });
 
+    // Add the policies required to deploy StateMachine in AWS SAM
     project.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -166,15 +174,6 @@ export class CicdStack extends Stack {
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         resources: [
-          "arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31",
-        ],
-        actions: ["cloudformation:CreateChangeSet"],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [
           `arn:aws:cloudformation:${this.region}:${this.account}:stack/*`,
         ],
         actions: [
@@ -215,10 +214,21 @@ export class CicdStack extends Stack {
         ],
       })
     );
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        resources: [
+          "arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31",
+        ],
+        actions: ["cloudformation:CreateChangeSet"],
+      })
+    );
 
+    // CodePipeline Artifacts
     const sourceOutput = new codepipeline.Artifact();
     const buildOutput = new codepipeline.Artifact();
 
+    // If there are any changes to the main branch
     const sourceAction = new codepipeline_actions.CodeCommitSourceAction({
       actionName: "CodeCommit",
       repository: repository,
@@ -226,6 +236,7 @@ export class CicdStack extends Stack {
       output: sourceOutput,
     });
 
+    // Deploy a StateMachine with AWS SAM
     const buildAction = new codepipeline_actions.CodeBuildAction({
       actionName: "CodeBuild",
       project: project,
@@ -233,6 +244,7 @@ export class CicdStack extends Stack {
       outputs: [buildOutput],
     });
 
+    // CodePipeline
     const pipeline = new codepipeline.Pipeline(this, "pipeline", {
       stages: [
         {
@@ -247,6 +259,7 @@ export class CicdStack extends Stack {
       artifactBucket: props.artifactBucket,
     });
 
+    // IAM policy for associating repositories with approval rule templates
     const approvalRuleTemplatePolicy =
       cr.AwsCustomResourcePolicy.fromStatements([
         new iam.PolicyStatement({
@@ -258,6 +271,7 @@ export class CicdStack extends Stack {
         }),
       ]);
 
+    // Associate approval rule templates for repository and main branch
     new cr.AwsCustomResource(
       this,
       "AssociateMainBranchApprovalRuleTemplateWithRepository",
@@ -294,6 +308,7 @@ export class CicdStack extends Stack {
       }
     );
 
+    // Associate approval rule templates for repository and develop branch
     new cr.AwsCustomResource(
       this,
       "AssociateDevelopBranchApprovalRuleTemplateWithRepository",
@@ -330,6 +345,7 @@ export class CicdStack extends Stack {
       }
     );
 
+    // EventBridge Rule for notification of PullRequest events
     new events.Rule(this, "PullRequestEventBriedgeRule", {
       eventPattern: {
         source: ["aws.codecommit"],
@@ -370,6 +386,7 @@ export class CicdStack extends Stack {
       ],
     });
 
+    // EventBridge Rule for notification of CodeBuildn status changes
     new events.Rule(this, "BuildStatusEventBriedgeRule", {
       eventPattern: {
         source: ["aws.codebuild"],
@@ -392,9 +409,10 @@ export class CicdStack extends Stack {
       ],
     });
 
+    //　EventBridge Rule for notifying the execution status of Step Functions
     new events.Rule(
       this,
-      "StepFunctionsExecutionStatusChangeEventBriedgeRule",
+      "ExecutionStatusOfStepFunctionsChangeEventBriedgeRule",
       {
         eventPattern: {
           source: ["aws.states"],

@@ -53,7 +53,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: !Sub ${StateMachineName}
-      DefinitionUri: statemachine/SFnStateWorkFlow.asl.json
+      DefinitionUri: statemachine/StateMachineWorkFlow.asl.json
       Role: !GetAtt StateMachineRole.Arn
       Logging:
         Level: ALL

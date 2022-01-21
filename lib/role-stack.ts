@@ -12,12 +12,14 @@ interface RoleStackProps extends StackProps {
 }
 
 export class RoleStack extends Stack {
+  // CodeCommit approval rule template
   public readonly mainBranchApprovalRuleTemplate: cr.AwsCustomResource;
   public readonly developBranchApprovalRuleTemplate: cr.AwsCustomResource;
 
   constructor(scope: Construct, id: string, props: RoleStackProps) {
     super(scope, id, props);
 
+    // IAM policy to prohibit direct editing of files on main and develop branches
     const denyPushMainAndDevelopBranchPolicy = new iam.ManagedPolicy(
       this,
       "DenyPushMainAndDevelopBranchPolicy",
@@ -41,7 +43,7 @@ export class RoleStack extends Stack {
       }
     );
 
-    // Create App Team IAM role
+    // IAM roles for the app team
     const appTeamIamRole = new iam.Role(this, "AppTeamIamRole", {
       assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
         Bool: {
@@ -54,7 +56,7 @@ export class RoleStack extends Stack {
       ],
     });
 
-    // Create App Manaer IAM role
+    // IAM role of the app team manager
     const appTeamManagerIamRole = new iam.Role(this, "AppTeamManagerIamRole", {
       assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
         Bool: {
@@ -67,7 +69,7 @@ export class RoleStack extends Stack {
       ],
     });
 
-    // Create Infra Team IAM role
+    // IAM roles for the infrastructure team
     const infraTeamIamRole = new iam.Role(this, "InfraTeamIamRole", {
       assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
         Bool: {
@@ -79,49 +81,7 @@ export class RoleStack extends Stack {
       ],
     });
 
-    // Create an IAM role for Lambda functions to operate EC2 instances.
-    const sfnIamRole = new iam.Role(this, "SfnIamRole", {
-      assumedBy: new iam.ServicePrincipal("states.amazonaws.com"),
-    });
-
-    // Create IAM policy for Lambda to operate EC2 instances.
-    const sfnIamPolicy = new iam.Policy(this, "SfnIamPolicy", {
-      statements: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["iam:PassRole"],
-          resources: [sfnIamRole.roleArn],
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["ec2:StartInstances", "ec2:StopInstances"],
-          resources: [`arn:aws:ec2:${this.region}:${this.account}:instance/*`],
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["ec2:DescribeInstances", "ec2:DescribeInstanceStatus"],
-          resources: ["*"],
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["ssm:SendCommand"],
-          resources: [
-            `arn:aws:ssm:${this.region}:${this.account}:managed-instance/*`,
-            `arn:aws:ssm:${this.region}:*:document/*`,
-            `arn:aws:ec2:${this.region}:${this.account}:instance/*`,
-          ],
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ["ssm:ListCommandInvocations"],
-          resources: ["*"],
-        }),
-      ],
-    });
-
-    // Attach an IAM policy to the IAM role for Lambda to operate EC2 instances.
-    sfnIamRole.attachInlinePolicy(sfnIamPolicy);
-
+    // CodeCommit approval rule template
     const approvalRuleTemplatePolicy =
       cr.AwsCustomResourcePolicy.fromStatements([
         new iam.PolicyStatement({
@@ -134,6 +94,7 @@ export class RoleStack extends Stack {
         }),
       ]);
 
+    // Approval rule template for CodeCommit's main branch
     this.mainBranchApprovalRuleTemplate = new cr.AwsCustomResource(
       this,
       "MainBranchApprovalRuleTemplate",
@@ -198,6 +159,7 @@ export class RoleStack extends Stack {
       }
     );
 
+    // Approval rule template for CodeCommit's develop branch
     this.developBranchApprovalRuleTemplate = new cr.AwsCustomResource(
       this,
       "DevelopBranchApprovalRuleTemplate",

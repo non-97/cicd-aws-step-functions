@@ -11,6 +11,7 @@ export class WorkflowSupportFunctionStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    // Lambda function to check if a StateMachine was executed on the same day
     new nodejs.NodejsFunction(this, "SameDayExecutionHistoryCheckFunction", {
       entry: "src/lambda/functions/same-day-execution-history-check.ts",
       runtime: lambda.Runtime.NODEJS_14_X,
@@ -47,6 +48,7 @@ export class WorkflowSupportFunctionStack extends Stack {
       ),
     });
 
+    // Lambda function to calculate the waiting time until a specified time
     new nodejs.NodejsFunction(
       this,
       "CalculateWaitingTimeForTargetTimeFunction",

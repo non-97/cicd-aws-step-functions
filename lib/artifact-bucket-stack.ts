@@ -12,7 +12,7 @@ export class ArtifactBucketStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Create S3 Bucket for CodepPipeline artifact
+    // S3 bucket for CodeBuild artifacts
     this.artifactBucket = new s3.Bucket(this, "ArtifactBucket", {
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: new s3.BlockPublicAccess({

@@ -7,7 +7,7 @@ import {
   aws_lambda_nodejs as nodejs,
 } from "aws-cdk-lib";
 
-export class NoticeEventsFunctionStack extends Stack {
+export class NoticeSfnCicdEventsFunctionStack extends Stack {
   public readonly noticePullRequestEventsFunction: nodejs.NodejsFunction;
   public readonly noticeCodeBuildEventsFunction: nodejs.NodejsFunction;
   public readonly noticeExecuteStateMachineEventsFunction: nodejs.NodejsFunction;
@@ -15,7 +15,7 @@ export class NoticeEventsFunctionStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Lambda function
+    // Lambda function for event notification of pull requests
     this.noticePullRequestEventsFunction = new nodejs.NodejsFunction(
       this,
       "NoticePullRequestEventsFunction",
@@ -57,6 +57,7 @@ export class NoticeEventsFunctionStack extends Stack {
       }
     );
 
+    // Lambda function for event notification of CodeBuild
     this.noticeCodeBuildEventsFunction = new nodejs.NodejsFunction(
       this,
       "NoticeCodeBuildEventsFunction",
@@ -81,6 +82,7 @@ export class NoticeEventsFunctionStack extends Stack {
       }
     );
 
+    // Lambda function for event notification of Execute StateMachine.
     this.noticeExecuteStateMachineEventsFunction = new nodejs.NodejsFunction(
       this,
       "NoticeExecuteStateMachineEventsFunction",
