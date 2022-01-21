@@ -26,7 +26,7 @@ interface CicdStackProps extends StackProps {
   sfnTemplateBucketGitTemplateKey: string;
   sfnTemplateBucketSamTemplateKey: string;
   appTeamWebhookUrl: string;
-  appManagerWebhookUrl: string;
+  appTeamManagerWebhookUrl: string;
   infraTeamWebhookUrl: string;
   mainBranchApprovalRuleTemplate: cr.AwsCustomResource;
   developBranchApprovalRuleTemplate: cr.AwsCustomResource;
@@ -354,13 +354,13 @@ export class CicdStack extends Stack {
               {
                 "refs/heads/develop": [
                   props.appTeamWebhookUrl,
-                  props.appManagerWebhookUrl,
+                  props.appTeamManagerWebhookUrl,
                 ],
               },
               {
                 "refs/heads/main": [
                   props.appTeamWebhookUrl,
-                  props.appManagerWebhookUrl,
+                  props.appTeamManagerWebhookUrl,
                   props.infraTeamWebhookUrl,
                 ],
               },
@@ -384,7 +384,7 @@ export class CicdStack extends Stack {
             originalEvent: events.EventField.fromPath("$"),
             slackWebhookUrls: [
               props.appTeamWebhookUrl,
-              props.appManagerWebhookUrl,
+              props.appTeamManagerWebhookUrl,
               props.infraTeamWebhookUrl,
             ],
           }),
@@ -413,7 +413,7 @@ export class CicdStack extends Stack {
                 originalEvent: events.EventField.fromPath("$"),
                 slackWebhookUrls: [
                   props.appTeamWebhookUrl,
-                  props.appManagerWebhookUrl,
+                  props.appTeamManagerWebhookUrl,
                   props.infraTeamWebhookUrl,
                 ],
               }),

@@ -55,7 +55,7 @@ export class RoleStack extends Stack {
     });
 
     // Create App Manaer IAM role
-    const appManagerIamRole = new iam.Role(this, "AppManagerIamRole", {
+    const appTeamManagerIamRole = new iam.Role(this, "AppTeamManagerIamRole", {
       assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
         Bool: {
           "aws:MultiFactorAuthPresent": "true",
@@ -214,7 +214,7 @@ export class RoleStack extends Stack {
                   Type: "Approvers",
                   NumberOfApprovalsNeeded: 1,
                   ApprovalPoolMembers: [
-                    `arn:aws:sts::${this.account}:assumed-role/${appManagerIamRole.roleName}/*`,
+                    `arn:aws:sts::${this.account}:assumed-role/${appTeamManagerIamRole.roleName}/*`,
                   ],
                 },
               ],
@@ -239,7 +239,7 @@ export class RoleStack extends Stack {
                   Type: "Approvers",
                   NumberOfApprovalsNeeded: 1,
                   ApprovalPoolMembers: [
-                    `arn:aws:sts::${this.account}:assumed-role/${appManagerIamRole.roleName}/*`,
+                    `arn:aws:sts::${this.account}:assumed-role/${appTeamManagerIamRole.roleName}/*`,
                   ],
                 },
               ],

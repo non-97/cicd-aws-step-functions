@@ -15,7 +15,7 @@ const app = new cdk.App();
 
 if (
   typeof process.env.APP_TEAM_WEBHOOK_URL == "undefined" ||
-  typeof process.env.APP_MANAGER_WEBHOOK_URL == "undefined" ||
+  typeof process.env.APP_TEAM_MANAGER_WEBHOOK_URL == "undefined" ||
   typeof process.env.INFRA_TEAM_WEBHOOK_URL == "undefined" ||
   typeof process.env.JUMP_ACCOUNT == "undefined"
 ) {
@@ -26,7 +26,7 @@ if (
 }
 
 const appTeamWebhookUrl = process.env.APP_TEAM_WEBHOOK_URL;
-const appManagerWebhookUrl = process.env.APP_MANAGER_WEBHOOK_URL;
+const appTeamManagerWebhookUrl = process.env.APP_TEAM_MANAGER_WEBHOOK_URL;
 const infraTeamWebhookUrl = process.env.INFRA_TEAM_WEBHOOK_URL;
 
 const sfnTemplateBucketStack = new SfnTemplateBucketStack(
@@ -59,7 +59,7 @@ new CicdStack(app, "StateMachine001CicdStack", {
   sfnTemplateBucketGitTemplateKey: "git-template.zip",
   sfnTemplateBucketSamTemplateKey: "sam-template.yml",
   appTeamWebhookUrl: appTeamWebhookUrl,
-  appManagerWebhookUrl: appManagerWebhookUrl,
+  appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
   infraTeamWebhookUrl: infraTeamWebhookUrl,
   mainBranchApprovalRuleTemplate: roleStack.mainBranchApprovalRuleTemplate,
   developBranchApprovalRuleTemplate:
