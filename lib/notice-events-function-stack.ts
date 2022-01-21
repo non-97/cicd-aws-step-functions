@@ -85,7 +85,7 @@ export class NoticeEventsFunctionStack extends Stack {
       this,
       "NoticeExecuteStateMachineEventsFunction",
       {
-        entry: "src/lambda/functions/notice-execute-statemachine-events.ts",
+        entry: "src/lambda/functions/notice-execute-state-machine-events.ts",
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,

@@ -20,7 +20,7 @@ import {
 } from "aws-cdk-lib";
 
 interface CicdStackProps extends StackProps {
-  jobnetId: string;
+  stateMachineName: string;
   artifactBucket: s3.Bucket;
   sfnTemplateBucket: s3.Bucket;
   sfnTemplateBucketGitTemplateKey: string;
@@ -44,12 +44,12 @@ export class CicdStack extends Stack {
 
     // Create CloudWatch Logs for CodeBuild Logs
     const codeBuildLogGroup = new logs.LogGroup(this, "CodeBuildLogGroup", {
-      logGroupName: `/aws/vendedlogs/codebuild/${props.jobnetId}-${stackIdAfterStackName}-Logs`,
+      logGroupName: `/aws/vendedlogs/codebuild/${props.stateMachineName}-${stackIdAfterStackName}-Logs`,
       retention: logs.RetentionDays.TWO_WEEKS,
     });
 
     const cfnRepository = new codecommit.CfnRepository(this, "CfnRepository", {
-      repositoryName: props.jobnetId,
+      repositoryName: props.stateMachineName,
       code: {
         branchName: "main",
         s3: {
@@ -89,7 +89,7 @@ export class CicdStack extends Stack {
           build: {
             commands: [
               `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.sfnTemplateBucketSamTemplateKey} ${this.stackName} ${props.jobnetId} ${stackIdAfterStackName}`,
+              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.sfnTemplateBucketSamTemplateKey} ${this.stackName} ${props.stateMachineName} ${stackIdAfterStackName}`,
             ],
           },
           post_build: {
@@ -401,7 +401,7 @@ export class CicdStack extends Stack {
           detailType: ["Step Functions Execution Status Change"],
           detail: {
             stateMachineArn: [
-              `arn:aws:states:${this.region}:${this.account}:stateMachine:${props.jobnetId}`,
+              `arn:aws:states:${this.region}:${this.account}:stateMachine:${props.stateMachineName}`,
             ],
           },
         },

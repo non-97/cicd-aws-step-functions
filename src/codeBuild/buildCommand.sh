@@ -6,7 +6,7 @@ set -x
 bucket_name="$1"
 sfn_template_bucket_sam_template_key="$2"
 stack_name="$3"
-jobnet_id="$4"
+state_machine_name="$4"
 stack_id_after_stack_name="$5"
 
 echo STATE_MACHINE_IAM_ROLE : $STATE_MACHINE_IAM_ROLE
@@ -32,15 +32,15 @@ if [ -s ./statemachine/SFnStateWorkFlow.asl.json ]; then
     --template-file output.yml \
     --s3-bucket $bucket_name \
     --s3-prefix $stack_name-p/ \
-    --stack-name $jobnet_id \
+    --stack-name $state_machine_name \
     --capabilities CAPABILITY_IAM \
     --no-fail-on-empty-changeset \
-    --parameter-overrides StateMachineName=$jobnet_id StackIdAfterStackName=$stack_id_after_stack_name Cron="'$CRON'" EventPattern="'$EVENT_PATTERN'" TargetEventBusArnAfterExecution="'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'" 
+    --parameter-overrides StateMachineName=$state_machine_name StackIdAfterStackName=$stack_id_after_stack_name Cron="'$CRON'" EventPattern="'$EVENT_PATTERN'" TargetEventBusArnAfterExecution="'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'" 
 
-  aws cloudformation describe-stacks --stack-name $jobnet_id
+  aws cloudformation describe-stacks --stack-name $state_machine_name
 else
   # If the ASL file is empty, delete the stack.
   yes | \
   sam delete \
-    --stack-name $jobnet_id
+    --stack-name $state_machine_name
 fi

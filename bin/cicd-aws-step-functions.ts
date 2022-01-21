@@ -52,8 +52,8 @@ const noticeEventsFunctionStack = new NoticeEventsFunctionStack(
 
 new WorkflowSupportFunctionStack(app, "WorkflowSupportFunctionStack");
 
-new CicdStack(app, "StateMachine001CicdStack", {
-  jobnetId: "StateMachine001",
+new CicdStack(app, "StateMachineTest001CicdStack", {
+  stateMachineName: "StateMachineTest001",
   artifactBucket: artifactBucketStack.artifactBucket,
   sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
   sfnTemplateBucketGitTemplateKey: "git-template.zip",
