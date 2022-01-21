@@ -82,13 +82,13 @@ export class CicdStack extends Stack {
           },
           pre_build: {
             commands: [
-              `aws s3 cp s3://${props.artifactBucket.bucketName}/preBuildCommand.sh .`,
+              `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
               `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.sfnTemplateBucketSamTemplateKey}`,
             ],
           },
           build: {
             commands: [
-              `aws s3 cp s3://${props.artifactBucket.bucketName}/buildCommand.sh .`,
+              `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
               `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.sfnTemplateBucketSamTemplateKey} ${this.stackName} ${props.jobnetId} ${stackIdAfterStackName}`,
             ],
           },

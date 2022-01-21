@@ -22,13 +22,5 @@ export class ArtifactBucketStack extends Stack {
         restrictPublicBuckets: true,
       }),
     });
-
-    // Upload the template file for CodeBuild Shell to the S3 bucket.
-    new s3deploy.BucketDeployment(this, "DeploymentArtifactBucket", {
-      sources: [
-        s3deploy.Source.asset("./src/codeBuild", { exclude: [".DS_Store"] }),
-      ],
-      destinationBucket: this.artifactBucket,
-    });
   }
 }

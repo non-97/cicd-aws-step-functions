@@ -23,9 +23,12 @@ export class SfnTemplateBucketStack extends Stack {
       }),
     });
 
-    // Upload the template file for the Step Function to the S3 bucket.
-    new s3deploy.BucketDeployment(this, "BucketDeployment", {
-      sources: [s3deploy.Source.asset("./src/s3", { exclude: [".DS_Store"] })],
+    // Upload the template file for the AWS Step Function & CodeBuild Shellto the S3 bucket.
+    new s3deploy.BucketDeployment(this, "DeployFilesToSfnTemplateBucket", {
+      sources: [
+        s3deploy.Source.asset("./src/codeCommit", { exclude: [".DS_Store"] }),
+        s3deploy.Source.asset("./src/codeBuild", { exclude: [".DS_Store"] }),
+      ],
       destinationBucket: this.sfnTemplateBucket,
     });
   }
