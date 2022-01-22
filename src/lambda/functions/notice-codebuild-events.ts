@@ -67,6 +67,7 @@ interface SlackMessgage {
   }[];
 }
 
+// Function to request Slack
 const requestSlack = async (
   slackWebhookUrl: string,
   slackMessage: SlackMessgage
@@ -99,20 +100,21 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<AxiosResponse | AxiosError | void> => {
+): Promise<(AxiosResponse | AxiosError)[] | null> => {
+  // If the required environment variables do not exist, the process is exitted
   if (!process.env["REGION"]) {
     console.log(
       `The region name environment variable (REGION) is not specified.
       e.g. us-east-1`
     );
-    return;
+    return null;
   }
   if (!process.env["ACCOUNT"]) {
     console.log(
       `The AWS Account ID environment variable (ACCOUNT) is not specified.
       e.g. 123456789012`
     );
-    return;
+    return null;
   }
 
   console.log(`event : ${JSON.stringify(event, null, 2)}`);
@@ -120,6 +122,7 @@ export const handler = async (
   const region: string = process.env["REGION"];
   const account: string = process.env["ACCOUNT"];
 
+  // Define Slack message templates
   const slackMessage: SlackMessgage = {
     blocks: [
       {
@@ -141,6 +144,7 @@ export const handler = async (
     ],
   };
 
+  // Index of each block
   const headerIndex = slackMessage.blocks.findIndex(
     (block) => block.block_id === "header"
   );
@@ -148,15 +152,21 @@ export const handler = async (
     (block) => block.block_id === "fieldsSection"
   );
 
+  // Name of the CodeBuild project
   const projectyName = event.originalEvent.detail["project-name"];
 
+  // Build ID of CodeBuild
   const buildId = event.originalEvent.detail["build-id"];
+
+  // Build status of CodeBuild
   const buildStatus = event.originalEvent.detail["build-status"];
 
+  // AWS Management Console URL
   const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${account}/projects/${projectyName}/build/${buildId.substring(
     buildId.indexOf(projectyName)
   )}?region=${region}`;
 
+  // Construct a Slack message
   slackMessage.blocks[
     headerIndex
   ].text!.text = `CodeBuild Build State has changed to ${buildStatus}`;
@@ -180,7 +190,11 @@ export const handler = async (
 
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
 
-  for (const [index, slackWebhookUrl] of event.slackWebhookUrls.entries()) {
-    await requestSlack(slackWebhookUrl, slackMessage);
-  }
+  // Send a message to the specified Slack webhook URL
+  const responses = await Promise.all(
+    event.slackWebhookUrls.map((slackWebhookUrl) =>
+      requestSlack(slackWebhookUrl, slackMessage)
+    )
+  );
+  return responses;
 };

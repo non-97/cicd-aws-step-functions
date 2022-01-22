@@ -2,7 +2,6 @@
 import "source-map-support/register";
 import "dotenv/config";
 import * as cdk from "aws-cdk-lib";
-import { Ec2InstancesStack } from "../lib/ec2-instances-stack";
 import { SfnTemplateBucketStack } from "../lib/sfn-template-bucket-stack";
 import { ArtifactBucketStack } from "../lib/artifact-bucket-stack";
 import { RoleStack } from "../lib/role-stack";
@@ -10,6 +9,7 @@ import { EventBusStack } from "../lib/event-bus-stack";
 import { NoticeSfnCicdEventsFunctionStack } from "../lib/notice-sfn-cicd-events-function-stack";
 import { WorkflowSupportFunctionStack } from "../lib/workflow-support-function-stack";
 import { CicdStack } from "../lib/cicd-stack";
+import { Ec2InstancesStack } from "../lib/ec2-instances-stack";
 
 const app = new cdk.App();
 
