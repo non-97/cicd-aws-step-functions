@@ -16,9 +16,9 @@ echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : "'$TARGET_EVENT_BUS_ARN_AFTER_EXECUT
 
 cd sam-sfn
 
-ls -l ./statemachine/SFnStateWorkFlow.asl.json
+ls -l ./statemachine/StateMachineWorkFlow.asl.json
 
-if [ -s ./statemachine/SFnStateWorkFlow.asl.json ]; then
+if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
   sam build \
     --template-file $sfn_template_bucket_sam_template_key
 

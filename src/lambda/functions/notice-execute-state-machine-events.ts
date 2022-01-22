@@ -36,6 +36,7 @@ interface SlackMessgage {
   }[];
 }
 
+// Function to request Slack
 const requestSlack = async (
   slackWebhookUrl: string,
   slackMessage: SlackMessgage
@@ -68,7 +69,8 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<AxiosResponse | AxiosError | void> => {
+): Promise<(AxiosResponse | AxiosError)[] | null> => {
+  // If the required environment variables do not exist, the process is exitted
   if (
     !process.env["UTC_OFFSET"] ||
     isNaN(Number(process.env["UTC_OFFSET"])) ||
@@ -78,14 +80,14 @@ export const handler = async (
     console.error(`
       The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly.
       e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`);
-    return;
+    return null;
   }
   if (!process.env["REGION"]) {
     console.log(
       `The region name environment variable (REGION) is not specified.
       e.g. us-east-1`
     );
-    return;
+    return null;
   }
 
   console.log(`event : ${JSON.stringify(event, null, 2)}`);
@@ -93,6 +95,7 @@ export const handler = async (
   const utcOffset: number = Number(process.env["UTC_OFFSET"]);
   const region: string = process.env["REGION"];
 
+  // Define Slack message templates
   const slackMessage: SlackMessgage = {
     blocks: [
       {
@@ -114,6 +117,7 @@ export const handler = async (
     ],
   };
 
+  // Index of each block
   const headerIndex = slackMessage.blocks.findIndex(
     (block) => block.block_id === "header"
   );
@@ -153,6 +157,7 @@ export const handler = async (
     headerIndex
   ].text!.text = `The status of Step Functions Execution has changed to ${executionStatus}`;
 
+  // Construct a Slack message
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
     text: `*AWS Management Console URL:*\n${consoleUrl}`,
@@ -188,7 +193,11 @@ export const handler = async (
 
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
 
-  for (const [index, slackWebhookUrl] of event.slackWebhookUrls.entries()) {
-    await requestSlack(slackWebhookUrl, slackMessage);
-  }
+  // Send a message to the specified Slack webhook URL
+  const responses = await Promise.all(
+    event.slackWebhookUrls.map((slackWebhookUrl) =>
+      requestSlack(slackWebhookUrl, slackMessage)
+    )
+  );
+  return responses;
 };
