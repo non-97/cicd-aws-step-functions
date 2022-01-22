@@ -40,8 +40,6 @@ const sfnTemplateBucketStack = new SfnTemplateBucketStack(
 // Stack of S3 buckets for CodeBuild artifacts
 const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
 
-// new Ec2InstancesStack(app, "Ec2InstancesStack");
-
 // Stack of IAM roles and CodeCommit approval rule templates for each role
 const roleStack = new RoleStack(app, "RoleStack", {
   jumpAccount: process.env.JUMP_ACCOUNT,
@@ -82,3 +80,5 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
   noticeExecuteStateMachineEventsFunction:
     noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
 });
+
+// new Ec2InstancesStack(app, "Ec2InstancesStack");

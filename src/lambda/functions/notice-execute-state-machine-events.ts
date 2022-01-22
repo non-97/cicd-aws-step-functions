@@ -1,7 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/cw-events.html
-
 interface CodeCommitEvent {
   originalEvent: {
     version: string;

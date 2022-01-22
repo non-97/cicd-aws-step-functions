@@ -14,6 +14,8 @@ import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 // - pullRequestMergeStatusUpdated Event
 // - pullRequestApprovalStateChanged Event
 
+// Interface for the following events
+// - commentOnPullRequestCreated Event
 interface CommentOnPullRequestCreatedDetailEvent {
   afterCommitId: string;
   beforeCommitId: string;
@@ -29,6 +31,8 @@ interface CommentOnPullRequestCreatedDetailEvent {
   repositoryName: string;
 }
 
+// Interface for the following events
+// - commentOnPullRequestUpdated Event
 interface CommentOnPullRequestUpdatedDetailEvent {
   afterCommitId: string;
   beforeCommitId: string;
@@ -42,6 +46,10 @@ interface CommentOnPullRequestUpdatedDetailEvent {
   repositoryName: string;
 }
 
+// Interface for the following events
+// - pullRequestCreated Event
+// - pullRequestSourceBranchUpdated Event
+// - pullRequestStatusChanged Event
 interface PullRequestDetailEvent {
   author: string;
   callerUserArn: string;
@@ -62,6 +70,8 @@ interface PullRequestDetailEvent {
   title: string;
 }
 
+// Interface for the following events
+// - pullRequestMergeStatusUpdated Event
 interface PullRequestMergeStatusUpdatedDetailEvent {
   author: string;
   callerUserArn: string;
@@ -83,6 +93,8 @@ interface PullRequestMergeStatusUpdatedDetailEvent {
   title: string;
 }
 
+// Interface for the following events
+// - pullRequestApprovalStateChanged Event
 interface PullRequestApprovalStateChangedDetailEvent {
   approvalStatus: string;
   author: string;
@@ -137,6 +149,7 @@ interface SlackMessgage {
 // Ref: https://api.slack.com/reference/block-kit/blocks#section_fields
 const characterLimit = 2000;
 
+// Function to request Slack
 const requestSlack = async (
   slackWebhookUrl: string,
   slackMessage: SlackMessgage
@@ -169,13 +182,14 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<AxiosResponse | AxiosError | void> => {
+): Promise<(AxiosResponse | AxiosError)[] | null> => {
+  // If the required environment variables do not exist, the process is exitted
   if (!process.env["REGION"]) {
     console.log(
       `The region name environment variable (REGION) is not specified.
       e.g. us-east-1`
     );
-    return;
+    return null;
   }
 
   console.log(`event : ${JSON.stringify(event, null, 2)}`);
@@ -190,6 +204,7 @@ export const handler = async (
     })
   );
 
+  // Define Slack message templates
   const slackMessage: SlackMessgage = {
     blocks: [
       {
@@ -219,6 +234,7 @@ export const handler = async (
     ],
   };
 
+  // Index of each block
   const headerIndex = slackMessage.blocks.findIndex(
     (block) => block.block_id === "header"
   );
@@ -229,6 +245,7 @@ export const handler = async (
     (block) => block.block_id === "textSection"
   );
 
+  // The name of the repository where the event occurred
   const repositoryName =
     "repositoryNames" in event.originalEvent.detail
       ? event.originalEvent.detail.repositoryNames.toString()
@@ -236,16 +253,36 @@ export const handler = async (
       ? event.originalEvent.detail.repositoryName
       : "undifined";
 
+  // Event notification body
   const notificationBody = event.originalEvent.detail.notificationBody;
+
+  // ARN of the user who triggered this event
   const callerUserArn = event.originalEvent.detail.callerUserArn;
+
+  // Whether the pull request has been merged or not
+  const isMerged =
+    getPullRequestCommandOutput.pullRequest?.pullRequestTargets?.find(
+      (pullRequestTarget) => pullRequestTarget.mergeMetadata
+    )?.mergeMetadata?.isMerged;
+
+  // Target branch for PullRequest
   const destinationReference =
     getPullRequestCommandOutput.pullRequest?.pullRequestTargets?.find(
       (pullRequestTarget) => pullRequestTarget.destinationReference
     )?.destinationReference;
+
+  // Source branch for PullRequest
+  const sourceReference =
+    getPullRequestCommandOutput.pullRequest?.pullRequestTargets?.find(
+      (pullRequestTarget) => pullRequestTarget.sourceReference
+    )?.sourceReference;
+
+  // AWS Management Console URL
   const consoleUrl = notificationBody.substring(
     notificationBody.indexOf("https://")
   );
 
+  // Construct a Slack message
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
     text: `*AWS Management Console URL:*\n${consoleUrl}`,
@@ -283,11 +320,7 @@ export const handler = async (
 
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
-    text: `*isMerged Status:*\n${
-      getPullRequestCommandOutput.pullRequest?.pullRequestTargets?.find(
-        (pullRequestTarget) => pullRequestTarget.mergeMetadata
-      )?.mergeMetadata?.isMerged
-    }`,
+    text: `*isMerged Status:*\n${isMerged}`,
   });
 
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
@@ -300,11 +333,13 @@ export const handler = async (
 
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
-    text: `*Source Reference:*\n${getPullRequestCommandOutput.pullRequest?.pullRequestTargets
-      ?.find((pullRequestTarget) => pullRequestTarget.sourceReference)
-      ?.sourceReference?.substring(0, characterLimit - 1)}`,
+    text: `*Source Reference:*\n${sourceReference?.substring(
+      0,
+      characterLimit - 1
+    )}`,
   });
 
+  // If the event is about comments
   if ("commentId" in event.originalEvent.detail) {
     const getCommentsForPullRequestCommandOutput = await codeCommitclient.send(
       new GetCommentsForPullRequestCommand({
@@ -312,9 +347,10 @@ export const handler = async (
       })
     );
 
+    // Get the name of the file commented on
     slackMessage.blocks[fieldsSectionIndex].fields?.push({
       type: "mrkdwn",
-      text: `*File:*\n${getCommentsForPullRequestCommandOutput.commentsForPullRequestData
+      text: `*File Name:*\n${getCommentsForPullRequestCommandOutput.commentsForPullRequestData
         ?.find((pullRequest) =>
           pullRequest.comments?.find(
             (comment) =>
@@ -325,6 +361,7 @@ export const handler = async (
         ?.location?.filePath?.substring(0, characterLimit - 1)}`,
     });
 
+    // Get comment
     slackMessage.blocks[fieldsSectionIndex].fields?.push({
       type: "mrkdwn",
       text: `*Comment:*\n${getCommentsForPullRequestCommandOutput.commentsForPullRequestData
@@ -344,6 +381,7 @@ export const handler = async (
     });
   }
 
+  // Approval status of the Pull Request
   if ("approvalStatus" in event.originalEvent.detail) {
     slackMessage.blocks[fieldsSectionIndex].fields?.push({
       type: "mrkdwn",
@@ -351,6 +389,7 @@ export const handler = async (
     });
   }
 
+  // Set the title by event type
   switch (event.originalEvent.detail.event) {
     case "commentOnPullRequestCreated":
       slackMessage.blocks[
@@ -391,13 +430,18 @@ export const handler = async (
 
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
 
+  // Send a message to the specified Slack webhook URL from the information of the target branch of the pull request
   for (const [key, slackWebhookUrls] of Object.entries(
     event.noticeTargets.find(
       (noticeTarget) => destinationReference! in noticeTarget
     )!
   )) {
-    for (const [index, slackWebhookUrl] of slackWebhookUrls.entries()) {
-      await requestSlack(slackWebhookUrl, slackMessage);
-    }
+    const responses = await Promise.all(
+      slackWebhookUrls.map((slackWebhookUrl) =>
+        requestSlack(slackWebhookUrl, slackMessage)
+      )
+    );
+    return responses;
   }
+  return null;
 };
