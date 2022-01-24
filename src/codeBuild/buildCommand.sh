@@ -39,7 +39,7 @@ if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
 
   aws cloudformation describe-stacks --stack-name $state_machine_name
 else
-  # If the ASL file is empty, delete the stack.
+  # If the ASL file is empty, delete the stack
   yes | \
   sam delete \
     --stack-name $state_machine_name

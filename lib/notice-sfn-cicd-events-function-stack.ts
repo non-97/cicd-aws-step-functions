@@ -82,7 +82,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
       }
     );
 
-    // Lambda function for event notification of Execute StateMachine.
+    // Lambda function for event notification of Execute StateMachine
     this.noticeExecuteStateMachineEventsFunction = new nodejs.NodejsFunction(
       this,
       "NoticeExecuteStateMachineEventsFunction",

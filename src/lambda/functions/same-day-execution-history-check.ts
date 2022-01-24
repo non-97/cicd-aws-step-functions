@@ -54,7 +54,7 @@ export const handler = async (event: Event): Promise<number> => {
   const utcOffsetMillisecond =
     (new Date().getTimezoneOffset() + utcOffset * 60) * 60 * 1000;
 
-  // Set the current local date.
+  // Set the current local date
   const currentLocalDate = new Date(Date.now() + utcOffsetMillisecond);
 
   // Convert base date to local date
@@ -76,7 +76,7 @@ export const handler = async (event: Event): Promise<number> => {
         )
       : new Date(tempBaseLocalDateMillisecond - utcOffsetMillisecond);
 
-  // Get a list of the execution history for the specified State Machine.
+  // Get a list of the execution history for the specified State Machine
   const response = await sfnClient
     .send(new ListExecutionsCommand({ stateMachineArn: stateMachineArn }))
     .catch((error: any) => {
@@ -86,7 +86,7 @@ export const handler = async (event: Event): Promise<number> => {
   console.log(response);
   console.log(`baseUtcDate : ${baseUtcDate}`);
 
-  // Return 1 if the specified State Machine has a history of being executed after the base time.
+  // Return 1 if the specified State Machine has a history of being executed after the base time
   if (
     !response?.executions ||
     (response?.executions[1]?.startDate &&

@@ -13,7 +13,7 @@ import { Ec2InstancesStack } from "../lib/ec2-instances-stack";
 
 const app = new cdk.App();
 
-// If the variable specified by dotenv is not defined, the process is aborted.
+// If the variable specified by dotenv is not defined, the process is aborted
 if (
   typeof process.env.APP_TEAM_WEBHOOK_URL == "undefined" ||
   typeof process.env.APP_TEAM_MANAGER_WEBHOOK_URL == "undefined" ||

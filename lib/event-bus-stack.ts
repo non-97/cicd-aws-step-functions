@@ -14,10 +14,10 @@ export class EventBusStack extends Stack {
       eventBusName: "StateMachineBus",
     });
 
-    // If the AWS account to access EventBus is not specified, finish the process.
+    // If the AWS account to access EventBus is not specified, finish the process
     if (typeof props?.sourceAccounts == "undefined") process.exit(0);
 
-    // Add to the policy principal the number of AWS accounts that access the EventBus.
+    // Add to the policy principal the number of AWS accounts that access the EventBus
     JSON.parse(props.sourceAccounts).forEach((sourceAccount: string) => {
       new events.CfnEventBusPolicy(
         this,

@@ -43,12 +43,12 @@ export const handler = async (event: Event): Promise<number | null> => {
   const utcOffsetMillisecond =
     (new Date().getTimezoneOffset() + utcOffset * 60) * 60 * 1000;
 
-  // Set the current local date.
+  // Set the current local date
   const currentLocalDate = new Date(Date.now() + utcOffsetMillisecond);
 
   console.log(`currentLocalDate : ${currentLocalDate}`);
 
-  // Convert the base date to a local date.
+  // Convert the base date to a local date
   const tempBaseLocalDateMillisecond = new Date(
     currentLocalDate.getFullYear(),
     currentLocalDate.getMonth(),
@@ -65,7 +65,7 @@ export const handler = async (event: Event): Promise<number | null> => {
 
   console.log(`baseLocalDate : ${baseLocalDate}`);
 
-  // Convert the target date to a local date.
+  // Convert the target date to a local date
   const tempTargetLocalDateMillisecond = new Date(
     baseLocalDate.getFullYear(),
     baseLocalDate.getMonth(),
@@ -82,7 +82,7 @@ export const handler = async (event: Event): Promise<number | null> => {
 
   console.log(`targetLocalDate : ${targetLocalDate}`);
 
-  // Return the difference between the current date and the target date.
+  // Return the difference between the current date and the target date
   const secounds = Math.round(
     (targetLocalDate.getTime() - currentLocalDate.getTime()) / 1000
   );
