@@ -65,8 +65,8 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
   stateMachineName: "StateMachineTest001",
   artifactBucket: artifactBucketStack.artifactBucket,
   sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
-  sfnTemplateBucketGitTemplateKey: "git-template.zip",
-  sfnTemplateBucketSamTemplateKey: "sam-template.yml",
+  gitTemplateFileName: "git-template.zip",
+  samTemplateFileName: "sam-template.yml",
   appTeamWebhookUrl: appTeamWebhookUrl,
   appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
   infraTeamWebhookUrl: infraTeamWebhookUrl,
@@ -81,4 +81,6 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
     noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
 });
 
-// new Ec2InstancesStack(app, "Ec2InstancesStack");
+// EC2 instances are used to hit the EC2 API in the state machine
+// Not used in production operations
+new Ec2InstancesStack(app, "Ec2InstancesStack");

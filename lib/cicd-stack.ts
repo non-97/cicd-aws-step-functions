@@ -23,8 +23,8 @@ interface CicdStackProps extends StackProps {
   stateMachineName: string;
   artifactBucket: s3.Bucket;
   sfnTemplateBucket: s3.Bucket;
-  sfnTemplateBucketGitTemplateKey: string;
-  sfnTemplateBucketSamTemplateKey: string;
+  gitTemplateFileName: string;
+  samTemplateFileName: string;
   appTeamWebhookUrl: string;
   appTeamManagerWebhookUrl: string;
   infraTeamWebhookUrl: string;
@@ -56,7 +56,7 @@ export class CicdStack extends Stack {
         branchName: "main",
         s3: {
           bucket: props.sfnTemplateBucket.bucketName,
-          key: props.sfnTemplateBucketGitTemplateKey,
+          key: props.gitTemplateFileName,
         },
       },
     });
@@ -90,13 +90,13 @@ export class CicdStack extends Stack {
           pre_build: {
             commands: [
               `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
-              `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.sfnTemplateBucketSamTemplateKey}`,
+              `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName}`,
             ],
           },
           build: {
             commands: [
               `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.sfnTemplateBucketSamTemplateKey} ${this.stackName} ${props.stateMachineName} ${stackIdAfterStackName}`,
+              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${this.stackName} ${props.stateMachineName} ${stackIdAfterStackName}`,
             ],
           },
           post_build: {

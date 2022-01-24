@@ -4,7 +4,7 @@
 set -x
 
 bucket_name="$1"
-sfn_template_bucket_sam_template_key="$2"
+sam_file_name="$2"
 stack_name="$3"
 state_machine_name="$4"
 stack_id_after_stack_name="$5"
@@ -20,10 +20,10 @@ ls -l ./statemachine/StateMachineWorkFlow.asl.json
 
 if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
   sam build \
-    --template-file $sfn_template_bucket_sam_template_key
+    --template-file $sam_file_name
 
   sam package \
-    --template-file $sfn_template_bucket_sam_template_key \
+    --template-file $sam_file_name \
     --s3-bucket $bucket_name \
     --s3-prefix $stack_name-p/ \
     --output-template-file output.yml
