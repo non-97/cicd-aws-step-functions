@@ -26,7 +26,6 @@ export class SfnTemplateBucketStack extends Stack {
     // Deploy AWS Step Function template files and CodeBuild shell scripts to S3 bucket
     new s3deploy.BucketDeployment(this, "DeployFilesToSfnTemplateBucket", {
       sources: [
-        s3deploy.Source.asset("./src/codeCommit", { exclude: [".DS_Store"] }),
         s3deploy.Source.asset("./src/codeBuild", { exclude: [".DS_Store"] }),
       ],
       destinationBucket: this.sfnTemplateBucket,

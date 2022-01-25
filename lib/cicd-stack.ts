@@ -16,9 +16,9 @@ import {
   aws_events_targets as targets,
   aws_lambda_nodejs as nodejs,
   custom_resources as cr,
-  CfnDeletionPolicy,
+  RemovalPolicy,
 } from "aws-cdk-lib";
-
+import * as path from "path";
 interface CicdStackProps extends StackProps {
   stateMachineName: string;
   artifactBucket: s3.IBucket;
@@ -50,26 +50,14 @@ export class CicdStack extends Stack {
 
     // CodeCommit repository
     // Upload files stored in an S3 bucket
-    const cfnRepository = new codecommit.CfnRepository(this, "CfnRepository", {
+    const repository = new codecommit.Repository(this, "Repository", {
       repositoryName: props.stateMachineName,
-      code: {
-        branchName: "main",
-        s3: {
-          bucket: props.sfnTemplateBucket.bucketName,
-          key: props.gitTemplateFileName,
-        },
-      },
+      code: codecommit.Code.fromZipFile(
+        `./src/codeCommit/${props.gitTemplateFileName}`,
+        "main"
+      ),
     });
-
-    // Don't delete the repository when you delete the stack
-    cfnRepository.cfnOptions.deletionPolicy = CfnDeletionPolicy.RETAIN;
-
-    // Redefining the repository with High Level Construct
-    const repository = codecommit.Repository.fromRepositoryName(
-      this,
-      "Repository",
-      cfnRepository.attrName
-    ) as codecommit.Repository;
+    repository.applyRemovalPolicy(RemovalPolicy.RETAIN);
 
     // CodeBuild　project
     // Deploy a StateMachine with AWS SAM
