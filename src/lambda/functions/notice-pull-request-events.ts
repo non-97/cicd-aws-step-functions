@@ -4,6 +4,7 @@ import {
   GetCommentsForPullRequestCommand,
 } from "@aws-sdk/client-codecommit";
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import * as util from "util";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codecommit/latest/userguide/monitoring-events.html#pullRequestCreated
 // - commentOnPullRequestCreated Event
@@ -182,7 +183,7 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<(AxiosResponse | AxiosError)[] | null> => {
+): Promise<string | null> => {
   // If the required environment variables do not exist, the process is exitted
   if (!process.env["REGION"]) {
     console.log(
@@ -441,7 +442,7 @@ export const handler = async (
         requestSlack(slackWebhookUrl, slackMessage)
       )
     );
-    return responses;
+    return util.inspect(responses);
   }
   return null;
 };

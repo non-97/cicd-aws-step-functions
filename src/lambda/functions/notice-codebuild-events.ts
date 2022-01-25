@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import * as util from "util";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/sample-build-notifications.html#sample-build-notifications-ref
 interface CodeCommitEvent {
@@ -100,7 +101,7 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<(AxiosResponse | AxiosError)[] | null> => {
+): Promise<string | null> => {
   // If the required environment variables do not exist, the process is exitted
   if (!process.env["REGION"]) {
     console.log(
@@ -196,5 +197,5 @@ export const handler = async (
       requestSlack(slackWebhookUrl, slackMessage)
     )
   );
-  return responses;
+  return util.inspect(responses);
 };
