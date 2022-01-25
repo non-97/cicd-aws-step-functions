@@ -7,7 +7,7 @@ import {
 } from "aws-cdk-lib";
 
 export class SfnTemplateBucketStack extends Stack {
-  public readonly sfnTemplateBucket: s3.Bucket;
+  public readonly sfnTemplateBucket: s3.IBucket;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);

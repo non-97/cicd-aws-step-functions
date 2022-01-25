@@ -21,8 +21,8 @@ import {
 
 interface CicdStackProps extends StackProps {
   stateMachineName: string;
-  artifactBucket: s3.Bucket;
-  sfnTemplateBucket: s3.Bucket;
+  artifactBucket: s3.IBucket;
+  sfnTemplateBucket: s3.IBucket;
   gitTemplateFileName: string;
   samTemplateFileName: string;
   appTeamWebhookUrl: string;

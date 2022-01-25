@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import { Stack, StackProps, aws_s3 as s3 } from "aws-cdk-lib";
 
 export class ArtifactBucketStack extends Stack {
-  public readonly artifactBucket: s3.Bucket;
+  public readonly artifactBucket: s3.IBucket;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
