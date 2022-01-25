@@ -1,10 +1,5 @@
 import { Construct } from "constructs";
-import {
-  Stack,
-  StackProps,
-  aws_s3 as s3,
-  aws_s3_deployment as s3deploy,
-} from "aws-cdk-lib";
+import { Stack, StackProps, aws_s3 as s3 } from "aws-cdk-lib";
 
 export class ArtifactBucketStack extends Stack {
   public readonly artifactBucket: s3.Bucket;
