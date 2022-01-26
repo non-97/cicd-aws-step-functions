@@ -18,7 +18,7 @@ import {
   custom_resources as cr,
   RemovalPolicy,
 } from "aws-cdk-lib";
-import * as path from "path";
+
 interface CicdStackProps extends StackProps {
   stateMachineName: string;
   artifactBucket: s3.IBucket;
