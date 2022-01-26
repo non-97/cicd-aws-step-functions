@@ -1,5 +1,3 @@
-// import * as cr from '@aws-cdk/custom-resources';
-
 import { Construct } from "constructs";
 import {
   Fn,
