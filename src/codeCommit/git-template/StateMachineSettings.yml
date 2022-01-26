@@ -2,9 +2,11 @@ Settings:
   cron: 
   event_pattern: 
   target_event_bus_arn_after_execution: 
-  is_enabled_tracing: false
-  iam_role_arn: 
+  xray_tracing: false
+  iam_policy_document: 
 
+# Example
+#
 # Settings:
 #   cron: cron(15 10 * * ? *)
 #   event_pattern: {
@@ -16,5 +18,22 @@ Settings:
 #     }
 #   }
 #   target_event_bus_arn_after_execution: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
-#   is_enabled_tracing: false
-#   iam_role_arn: arn:aws:iam::<AWS Account ID>:role/<IAM Role Name>
+#   xray_tracing: false
+#   iam_policy_document: {
+#       "Version": "2012-10-17",
+#       "Statement": [
+#           {
+#               "Sid": "VisualEditor0",
+#               "Effect": "Allow",
+#               "Action": [
+#                   "states:DescribeStateMachine",
+#                   "states:DescribeExecution",
+#                   "states:ListExecutions"
+#               ],
+#               "Resource": [
+#                   "arn:aws:states:us-east-1:<AWS Account ID>:execution:*:*",
+#                   "arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:*"
+#               ]
+#           }
+#       ]
+#   }

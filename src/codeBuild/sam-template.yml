@@ -33,26 +33,53 @@ Parameters:
     Description: Please type the target event bus arn after execution.
     Type: String
     Default: 'arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default'
-  IsEnabledTracing:
+  XRayTracing:
     Description: Please type the AWS X-Ray trace to enable or not.
     Type: String
     Default: false
     AllowedValues:
       - true
       - false
+  IamPolicyDocument:
+    Description: Please type the IAM Policy Document.
+    Type: String
+    Default: '{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "states:DescribeStateMachine",
+                    "states:DescribeExecution",
+                    "states:ListExecutions"
+                ],
+                "Resource": [
+                    "arn:aws:states:us-east-1:<AWS Account ID>:execution:*:*",
+                    "arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:*"
+                ]
+            }
+        ]
+    }'
 
 Conditions:
-  IsCron: !Not 
+  ExistsCron: !Not 
     - !Equals
       - !Sub ${Cron}
       - "null"
-  IsEventPattern: !Not 
+  ExistsEventPattern: !Not 
     - !Equals
       - !Sub ${EventPattern}
       - "null"
-  IsTargetEventBusArnAfterExecution: !Not 
+  ExistsTargetEventBusArnAfterExecution: !Not 
     - !Equals
       - !Sub ${TargetEventBusArnAfterExecution}
+      - "null"
+  IsEnabledXRayTracing: !Equals
+      - !Sub ${XRayTracing}
+      - true
+  ExistsIamPolicyDocument: !Not 
+    - !Equals
+      - !Sub ${IamPolicyDocument}
       - "null"
 
 Resources:
@@ -69,7 +96,7 @@ Resources:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
       Tracing: 
-        Enabled: !Sub ${IsEnabledTracing}
+        Enabled: !Sub ${XRayTracing}
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
@@ -111,27 +138,35 @@ Resources:
               ]
           }
           PolicyName: CloudWatchLogsDeliveryFullAccessPolicy
-        - PolicyDocument: {
-              "Version": "2012-10-17",
-              "Statement": [
-                  {
-                      "Effect": "Allow",
-                      "Action": [
-                          "xray:PutTraceSegments",
-                          "xray:PutTelemetryRecords",
-                          "xray:GetSamplingRules",
-                          "xray:GetSamplingTargets"
-                      ],
-                      "Resource": [
-                          "*"
-                      ]
-                  }
-              ]
-          }
-          PolicyName: XRayAccessPolicy
+        - !If
+          - IsEnabledXRayTracing
+          - PolicyDocument: {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "xray:PutTraceSegments",
+                            "xray:PutTelemetryRecords",
+                            "xray:GetSamplingRules",
+                            "xray:GetSamplingTargets"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
+                ]
+            }
+            PolicyName: XRayAccessPolicy
+          - !Ref AWS::NoValue
+        - !If
+          - ExistsIamPolicyDocument
+          - PolicyDocument: !Sub ${IamPolicyDocument}
+            PolicyName: IamPolicyForExecuteStateMachine
+          - !Ref AWS::NoValue
 
   ScheduledRule: 
-    Condition: IsCron
+    Condition: ExistsCron
     Type: AWS::Events::Rule
     Properties: 
       Description: ScheduledRule
@@ -143,7 +178,7 @@ Resources:
           RoleArn: !GetAtt ExecuteStateMachineRole.Arn
 
   EventPatternRule: 
-    Condition: IsEventPattern
+    Condition: ExistsEventPattern
     Type: AWS::Events::Rule
     Properties: 
       Description: EventPatternRule
@@ -179,7 +214,7 @@ Resources:
                     - !Ref StateMachine
 
   TargetEventBusArnAfterExecutionRule: 
-    Condition: IsTargetEventBusArnAfterExecution
+    Condition: ExistsTargetEventBusArnAfterExecution
     Type: AWS::Events::Rule
     Properties: 
       Description: TargetEventBusArnAfterExecutionRule
@@ -199,7 +234,7 @@ Resources:
 
   InvokeEventBusRole: 
       Type: AWS::IAM::Role
-      Condition: IsTargetEventBusArnAfterExecution
+      Condition: ExistsTargetEventBusArnAfterExecution
       Properties:
         AssumeRolePolicyDocument:
           Version: "2012-10-17"
