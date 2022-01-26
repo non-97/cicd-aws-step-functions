@@ -61,7 +61,7 @@ export class CicdStack extends Stack {
 
     // CodeBuild　project
     // Deploy a StateMachine with AWS SAM
-    const project = new codebuild.PipelineProject(this, "project", {
+    const project = new codebuild.PipelineProject(this, "Project", {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: "0.2",
         phases: {
@@ -218,15 +218,16 @@ export class CicdStack extends Stack {
     const buildOutput = new codepipeline.Artifact();
 
     // If there are any changes to the main branch
-    const sourceAction = new codepipeline_actions.CodeCommitSourceAction({
-      actionName: "CodeCommit",
-      repository: repository,
-      branch: "main",
-      output: sourceOutput,
-    });
+    const sourceActionMainBranch =
+      new codepipeline_actions.CodeCommitSourceAction({
+        actionName: "CodeCommit",
+        repository: repository,
+        branch: "main",
+        output: sourceOutput,
+      });
 
     // Deploy a StateMachine with AWS SAM
-    const buildAction = new codepipeline_actions.CodeBuildAction({
+    const buildActionMainBranch = new codepipeline_actions.CodeBuildAction({
       actionName: "CodeBuild",
       project: project,
       input: sourceOutput,
@@ -234,15 +235,15 @@ export class CicdStack extends Stack {
     });
 
     // CodePipeline
-    const pipeline = new codepipeline.Pipeline(this, "pipeline", {
+    new codepipeline.Pipeline(this, "PipelineMainBranch", {
       stages: [
         {
           stageName: "Source",
-          actions: [sourceAction],
+          actions: [sourceActionMainBranch],
         },
         {
           stageName: "Build",
-          actions: [buildAction],
+          actions: [buildActionMainBranch],
         },
       ],
       artifactBucket: props.artifactBucket,
