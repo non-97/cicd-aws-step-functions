@@ -45,8 +45,10 @@ const roleStack = new RoleStack(app, "RoleStack", {
   jumpAccount: process.env.JUMP_ACCOUNT,
 });
 
-// Stack of EventBus
-new EventBusStack(app, "EventBusStack", {
+// Stack of Event Bus
+// It is used for accepting events from other accounts
+new EventBusStack(app, "StateMachineEventBus", {
+  eventBusName: "StateMachineEventBus",
   sourceAccounts: process.env.SOURCE_ACCOUNTS,
 });
 
@@ -83,4 +85,4 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
 
 // EC2 instances are used to hit the EC2 API in the state machine
 // Not used in production operations
-new Ec2InstancesStack(app, "Ec2InstancesStack");
+new Ec2InstancesStack(app, "DemoEc2InstancesStack");
