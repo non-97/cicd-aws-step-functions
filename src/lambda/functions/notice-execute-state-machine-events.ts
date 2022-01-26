@@ -70,7 +70,7 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<string | null> => {
+): Promise<string | Error> => {
   // If the required environment variables do not exist, the process is exited
   if (
     !process.env["UTC_OFFSET"] ||
@@ -78,17 +78,14 @@ export const handler = async (
     Number(process.env["UTC_OFFSET"]) > 14 ||
     Number(process.env["UTC_OFFSET"]) < -12
   ) {
-    console.error(`
-      The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly.
-      e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`);
-    return null;
+    throw new Error(
+      `The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly. e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`
+    );
   }
   if (!process.env["REGION"]) {
-    console.log(
-      `The region name environment variable (REGION) is not specified.
-      e.g. us-east-1`
+    throw new Error(
+      `The region name environment variable (REGION) is not specified. e.g. us-east-1`
     );
-    return null;
   }
 
   console.log(`event : ${JSON.stringify(event, null, 2)}`);

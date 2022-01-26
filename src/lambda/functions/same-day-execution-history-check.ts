@@ -4,10 +4,11 @@ interface Event {
   stateMachineArn: string;
 }
 
-export const handler = async (event: Event): Promise<number> => {
+export const handler = async (event: Event): Promise<number | Error> => {
   if (!event.stateMachineArn) {
-    console.log("The argument does not specify the Arn of the State Machine.");
-    return 1;
+    throw new Error(
+      "The argument does not specify the Arn of the State Machine."
+    );
   }
 
   if (
@@ -16,38 +17,34 @@ export const handler = async (event: Event): Promise<number> => {
     Number(process.env["UTC_OFFSET"]) > 14 ||
     Number(process.env["UTC_OFFSET"]) < -12
   ) {
-    console.log(`
-      The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly.
-      e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`);
-    return 1;
+    throw new Error(
+      `The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly. e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`
+    );
   }
 
   if (
     !process.env["BASE_LOCAL_TIME"] ||
     !process.env["BASE_LOCAL_TIME"].match(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)
   ) {
-    console.log(`
-      The environment variable for base time (BASE_LOCAL_TIME) has not been entered correctly.
-      e.g. 07:30`);
-    return 1;
+    throw new Error(
+      `The environment variable for base time (BASE_LOCAL_TIME) has not been entered correctly. e.g. 07:30`
+    );
   }
 
-  if (!process.env["REGION_NAME"]) {
-    console.log(
-      `The region name environment variable (REGION_NAME) is not specified.
-      e.g. us-east-1`
+  if (!process.env["REGION"]) {
+    throw new Error(
+      `The region name environment variable (REGION_NAME) is not specified. e.g. us-east-1`
     );
-    return 1;
   }
 
   const stateMachineArn: string = event.stateMachineArn;
   const utcOffset: number = Number(process.env["UTC_OFFSET"]);
   const baseLocalTime: string[] = process.env["BASE_LOCAL_TIME"].split(":");
-  const regionName: string = process.env["REGION_NAME"];
+  const region: string = process.env["REGION"];
 
   // Set State Machine Client
   const sfnClient = new SFNClient({
-    region: regionName,
+    region: region,
   });
 
   // Time difference from UTC (millisecond)

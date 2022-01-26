@@ -2,15 +2,14 @@ interface Event {
   targetLocalTime: string;
 }
 
-export const handler = async (event: Event): Promise<number | null> => {
+export const handler = async (event: Event): Promise<number | Error> => {
   if (
     !event.targetLocalTime ||
     !event.targetLocalTime.match(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)
   ) {
-    console.error(`
-      The argument for the target time (targetLocalTime) has not been entered correctly.
-      e.g. 23:30`);
-    return null;
+    throw new Error(
+      `The argument for the target time (targetLocalTime) has not been entered correctly. e.g. 23:30`
+    );
   }
 
   if (
@@ -19,20 +18,18 @@ export const handler = async (event: Event): Promise<number | null> => {
     Number(process.env["UTC_OFFSET"]) > 14 ||
     Number(process.env["UTC_OFFSET"]) < -12
   ) {
-    console.error(`
-      The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly.
-      e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`);
-    return null;
+    throw new Error(
+      `The environment variable for UTC offset (UTC_OFFSET) has not been entered correctly. e.g. For Asia/Tokyo, "9". For America/Los_Angeles, "-8".`
+    );
   }
 
   if (
     !process.env["BASE_LOCAL_TIME"] ||
     !process.env["BASE_LOCAL_TIME"].match(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)
   ) {
-    console.error(`
-      The environment variable for base time (BASE_LOCAL_TIME) has not been entered correctly.
-      e.g. 07:30`);
-    return null;
+    throw new Error(
+      `The environment variable for base time (BASE_LOCAL_TIME) has not been entered correctly. e.g. 07:30`
+    );
   }
 
   const targetLocalTime: string[] = event.targetLocalTime.split(":");

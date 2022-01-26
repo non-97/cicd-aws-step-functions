@@ -22,7 +22,7 @@ export class WorkflowSupportFunctionStack extends Stack {
       environment: {
         UTC_OFFSET: "9",
         BASE_LOCAL_TIME: "07:30",
-        REGION_NAME: this.region,
+        REGION: this.region,
       },
       role: new iam.Role(
         this,

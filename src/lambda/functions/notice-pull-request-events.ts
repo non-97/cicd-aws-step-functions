@@ -183,14 +183,12 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<string | null> => {
+): Promise<string | null | Error> => {
   // If the required environment variables do not exist, the process is exited
   if (!process.env["REGION"]) {
-    console.log(
-      `The region name environment variable (REGION) is not specified.
-      e.g. us-east-1`
+    throw new Error(
+      `The region name environment variable (REGION) is not specified. e.g. us-east-1`
     );
-    return null;
   }
 
   console.log(`event : ${JSON.stringify(event, null, 2)}`);

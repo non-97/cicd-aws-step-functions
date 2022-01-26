@@ -101,21 +101,17 @@ const requestSlack = async (
 
 export const handler = async (
   event: CodeCommitEvent
-): Promise<string | null> => {
+): Promise<string | Error> => {
   // If the required environment variables do not exist, the process is exited
   if (!process.env["REGION"]) {
-    console.log(
-      `The region name environment variable (REGION) is not specified.
-      e.g. us-east-1`
+    throw new Error(
+      `The region name environment variable (REGION) is not specified. e.g. us-east-1`
     );
-    return null;
   }
   if (!process.env["ACCOUNT"]) {
-    console.log(
-      `The AWS Account ID environment variable (ACCOUNT) is not specified.
-      e.g. 123456789012`
+    throw new Error(
+      `The AWS Account ID environment variable (ACCOUNT) is not specified. e.g. 123456789012`
     );
-    return null;
   }
 
   console.log(`event : ${JSON.stringify(event, null, 2)}`);
