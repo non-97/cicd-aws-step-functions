@@ -47,7 +47,7 @@ const roleStack = new RoleStack(app, "RoleStack", {
 
 // Stack of Event Bus
 // It is used for accepting events from other accounts
-new EventBusStack(app, "StateMachineEventBus", {
+new EventBusStack(app, "StateMachineEventBusStack", {
   eventBusName: "StateMachineEventBus",
   sourceAccounts: process.env.SOURCE_ACCOUNTS,
 });
