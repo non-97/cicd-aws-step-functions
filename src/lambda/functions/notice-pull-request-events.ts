@@ -137,7 +137,7 @@ interface CodeCommitEvent {
   noticeTargets: { [key: string]: string[] }[];
 }
 
-interface SlackMessgage {
+interface SlackMessage {
   blocks: {
     type: string;
     block_id?: string;
@@ -153,7 +153,7 @@ const characterLimit = 2000;
 // Function to request Slack
 const requestSlack = async (
   slackWebhookUrl: string,
-  slackMessage: SlackMessgage
+  slackMessage: SlackMessage
 ) => {
   return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
     // Request parameters
@@ -197,16 +197,16 @@ export const handler = async (
 
   const region: string = process.env["REGION"];
 
-  const codeCommitclient = new CodeCommitClient({ region: region });
+  const codeCommitClient = new CodeCommitClient({ region: region });
 
-  const getPullRequestCommandOutput = await codeCommitclient.send(
+  const getPullRequestCommandOutput = await codeCommitClient.send(
     new GetPullRequestCommand({
       pullRequestId: event.originalEvent.detail.pullRequestId,
     })
   );
 
   // Define Slack message templates
-  const slackMessage: SlackMessgage = {
+  const slackMessage: SlackMessage = {
     blocks: [
       {
         type: "header",
@@ -252,7 +252,7 @@ export const handler = async (
       ? event.originalEvent.detail.repositoryNames.toString()
       : event.originalEvent.detail.repositoryName
       ? event.originalEvent.detail.repositoryName
-      : "undifined";
+      : "undefined";
 
   // Event notification body
   const notificationBody = event.originalEvent.detail.notificationBody;
@@ -342,7 +342,7 @@ export const handler = async (
 
   // If the event is about comments
   if ("commentId" in event.originalEvent.detail) {
-    const getCommentsForPullRequestCommandOutput = await codeCommitclient.send(
+    const getCommentsForPullRequestCommandOutput = await codeCommitClient.send(
       new GetCommentsForPullRequestCommand({
         pullRequestId: event.originalEvent.detail.pullRequestId,
       })

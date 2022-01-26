@@ -28,7 +28,7 @@ interface CodeCommitEvent {
   slackWebhookUrls: string[];
 }
 
-interface SlackMessgage {
+interface SlackMessage {
   blocks: {
     type: string;
     block_id?: string;
@@ -40,7 +40,7 @@ interface SlackMessgage {
 // Function to request Slack
 const requestSlack = async (
   slackWebhookUrl: string,
-  slackMessage: SlackMessgage
+  slackMessage: SlackMessage
 ) => {
   return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
     // Request parameters
@@ -97,7 +97,7 @@ export const handler = async (
   const region: string = process.env["REGION"];
 
   // Define Slack message templates
-  const slackMessage: SlackMessgage = {
+  const slackMessage: SlackMessage = {
     blocks: [
       {
         type: "header",
@@ -147,7 +147,7 @@ export const handler = async (
     : null;
   const stopDateISOString = stopDate ? stopDate.toLocaleString("ja-JP") : null;
 
-  const durationSecounds =
+  const durationSeconds =
     startDate && stopDate
       ? Math.round((stopDate.getTime() - startDate.getTime()) / 1000)
       : null;
@@ -177,7 +177,7 @@ export const handler = async (
   });
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
-    text: `*Execution Stattus:*\n${executionStatus}`,
+    text: `*Execution Status:*\n${executionStatus}`,
   });
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
@@ -189,7 +189,7 @@ export const handler = async (
   });
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
-    text: `*Duration Secounds:*\n${durationSecounds}`,
+    text: `*Duration Seconds:*\n${durationSeconds}`,
   });
 
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);

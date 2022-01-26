@@ -335,7 +335,7 @@ export class CicdStack extends Stack {
     );
 
     // EventBridge Rule for notification of PullRequest events
-    new events.Rule(this, "PullRequestEventBriedgeRule", {
+    new events.Rule(this, "PullRequestEventBridgeRule", {
       eventPattern: {
         source: ["aws.codecommit"],
         detail: {
@@ -375,8 +375,8 @@ export class CicdStack extends Stack {
       ],
     });
 
-    // EventBridge Rule for notification of CodeBuildn status changes
-    new events.Rule(this, "BuildStatusEventBriedgeRule", {
+    // EventBridge Rule for notification of CodeBuild status changes
+    new events.Rule(this, "BuildStatusEventBridgeRule", {
       eventPattern: {
         source: ["aws.codebuild"],
         detailType: ["CodeBuild Build State Change"],
@@ -401,7 +401,7 @@ export class CicdStack extends Stack {
     //　EventBridge Rule for notifying the execution status of Step Functions
     new events.Rule(
       this,
-      "ExecutionStatusOfStepFunctionsChangeEventBriedgeRule",
+      "ExecutionStatusOfStepFunctionsChangeEventBridgeRule",
       {
         eventPattern: {
           source: ["aws.states"],

@@ -59,7 +59,7 @@ interface CodeCommitEvent {
   slackWebhookUrls: string[];
 }
 
-interface SlackMessgage {
+interface SlackMessage {
   blocks: {
     type: string;
     block_id?: string;
@@ -71,7 +71,7 @@ interface SlackMessgage {
 // Function to request Slack
 const requestSlack = async (
   slackWebhookUrl: string,
-  slackMessage: SlackMessgage
+  slackMessage: SlackMessage
 ) => {
   return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
     // Request parameters
@@ -124,7 +124,7 @@ export const handler = async (
   const account: string = process.env["ACCOUNT"];
 
   // Define Slack message templates
-  const slackMessage: SlackMessgage = {
+  const slackMessage: SlackMessage = {
     blocks: [
       {
         type: "header",
@@ -154,7 +154,7 @@ export const handler = async (
   );
 
   // Name of the CodeBuild project
-  const projectyName = event.originalEvent.detail["project-name"];
+  const projectName = event.originalEvent.detail["project-name"];
 
   // Build ID of CodeBuild
   const buildId = event.originalEvent.detail["build-id"];
@@ -163,8 +163,8 @@ export const handler = async (
   const buildStatus = event.originalEvent.detail["build-status"];
 
   // AWS Management Console URL
-  const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${account}/projects/${projectyName}/build/${buildId.substring(
-    buildId.indexOf(projectyName)
+  const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${account}/projects/${projectName}/build/${buildId.substring(
+    buildId.indexOf(projectName)
   )}?region=${region}`;
 
   // Construct a Slack message
@@ -178,7 +178,7 @@ export const handler = async (
   });
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
-    text: `*Project Name:*\n${projectyName}`,
+    text: `*Project Name:*\n${projectName}`,
   });
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
@@ -186,7 +186,7 @@ export const handler = async (
   });
   slackMessage.blocks[fieldsSectionIndex].fields?.push({
     type: "mrkdwn",
-    text: `*Build Stattus:*\n${buildStatus}`,
+    text: `*Build Status:*\n${buildStatus}`,
   });
 
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
