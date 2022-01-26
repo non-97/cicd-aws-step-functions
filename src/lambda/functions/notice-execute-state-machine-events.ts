@@ -71,7 +71,7 @@ const requestSlack = async (
 export const handler = async (
   event: CodeCommitEvent
 ): Promise<string | null> => {
-  // If the required environment variables do not exist, the process is exitted
+  // If the required environment variables do not exist, the process is exited
   if (
     !process.env["UTC_OFFSET"] ||
     isNaN(Number(process.env["UTC_OFFSET"])) ||

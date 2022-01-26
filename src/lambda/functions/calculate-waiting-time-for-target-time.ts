@@ -83,11 +83,11 @@ export const handler = async (event: Event): Promise<number | null> => {
   console.log(`targetLocalDate : ${targetLocalDate}`);
 
   // Return the difference between the current date and the target date
-  const secounds = Math.round(
+  const seconds = Math.round(
     (targetLocalDate.getTime() - currentLocalDate.getTime()) / 1000
   );
 
-  console.log(`secounds : ${secounds}`);
+  console.log(`seconds : ${seconds}`);
 
-  return secounds;
+  return seconds;
 };
