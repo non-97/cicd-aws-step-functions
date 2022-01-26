@@ -5,6 +5,7 @@ import {
   aws_iam as iam,
   aws_lambda as lambda,
   aws_lambda_nodejs as nodejs,
+  aws_logs as logs,
 } from "aws-cdk-lib";
 
 export class NoticeSfnCicdEventsFunctionStack extends Stack {
@@ -54,6 +55,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
             ),
           ],
         }),
+        logRetention: logs.RetentionDays.TWO_WEEKS,
       }
     );
 
@@ -79,6 +81,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
             ),
           ],
         }),
+        logRetention: logs.RetentionDays.TWO_WEEKS,
       }
     );
 
@@ -108,6 +111,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
             ],
           }
         ),
+        logRetention: logs.RetentionDays.TWO_WEEKS,
       }
     );
   }

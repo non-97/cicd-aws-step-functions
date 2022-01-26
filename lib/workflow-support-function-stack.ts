@@ -5,6 +5,7 @@ import {
   aws_iam as iam,
   aws_lambda as lambda,
   aws_lambda_nodejs as nodejs,
+  aws_logs as logs,
 } from "aws-cdk-lib";
 
 export class WorkflowSupportFunctionStack extends Stack {
@@ -46,6 +47,7 @@ export class WorkflowSupportFunctionStack extends Stack {
           ],
         }
       ),
+      logRetention: logs.RetentionDays.TWO_WEEKS,
     });
 
     // Lambda function to calculate the waiting time until a specified time
@@ -74,6 +76,7 @@ export class WorkflowSupportFunctionStack extends Stack {
             ],
           }
         ),
+        logRetention: logs.RetentionDays.TWO_WEEKS,
       }
     );
   }
