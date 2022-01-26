@@ -19,6 +19,9 @@ echo EVENT_PATTERN : "'EVENT_PATTERN'"
 TARGET_EVENT_BUS_ARN_AFTER_EXECUTION=`yq -r '.Settings.target_event_bus_arn_after_execution' StateMachineSettings.yml`
 echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : "'TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'"
 
+IS_ENABLED_TRACING=`yq -r '.Settings.is_enabled_tracing' StateMachineSettings.yml`
+echo IS_ENABLED_TRACING : "'IS_ENABLED_TRACING'"
+
 # Download the AWS SAM template file from the S3 bucket
 aws s3 cp s3://$bucket_name/$sam_file_name $sam_file_name
 

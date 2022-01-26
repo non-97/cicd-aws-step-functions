@@ -13,6 +13,7 @@ echo STATE_MACHINE_IAM_ROLE : $STATE_MACHINE_IAM_ROLE
 echo CRON : "'$CRON'"
 echo EVENT_PATTERN : "'$EVENT_PATTERN'"
 echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : "'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'"
+echo IS_ENABLED_TRACING : "'$IS_ENABLED_TRACING'"
 
 cd sam-sfn
 
@@ -35,7 +36,7 @@ if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
     --stack-name $state_machine_name \
     --capabilities CAPABILITY_IAM \
     --no-fail-on-empty-changeset \
-    --parameter-overrides StateMachineName=$state_machine_name StackIdAfterStackName=$stack_id_after_stack_name Cron="'$CRON'" EventPattern="'$EVENT_PATTERN'" TargetEventBusArnAfterExecution="'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'" 
+    --parameter-overrides StateMachineName=$state_machine_name StackIdAfterStackName=$stack_id_after_stack_name Cron="'$CRON'" EventPattern="'$EVENT_PATTERN'" TargetEventBusArnAfterExecution="'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'" IsEnabledTracing="'$IS_ENABLED_TRACING'"
 
   aws cloudformation describe-stacks --stack-name $state_machine_name
 else

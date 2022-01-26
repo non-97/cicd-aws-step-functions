@@ -33,6 +33,13 @@ Parameters:
     Description: Please type the target event bus arn after execution.
     Type: String
     Default: 'arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default'
+  IsEnabledTracing:
+    Description: Please type the AWS X-Ray trace to enable or not.
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
 
 Conditions:
   IsCron: !Not 
@@ -61,6 +68,8 @@ Resources:
         Destinations:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Tracing: 
+        Enabled: !Sub ${IsEnabledTracing}
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup

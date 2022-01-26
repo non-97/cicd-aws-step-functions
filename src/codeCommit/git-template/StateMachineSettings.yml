@@ -2,6 +2,7 @@ Settings:
   cron: 
   event_pattern: 
   target_event_bus_arn_after_execution: 
+  is_enabled_tracing: false
   iam_role_arn: 
 
 # Settings:
@@ -15,4 +16,5 @@ Settings:
 #     }
 #   }
 #   target_event_bus_arn_after_execution: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
+#   is_enabled_tracing: false
 #   iam_role_arn: arn:aws:iam::<AWS Account ID>:role/<IAM Role Name>
