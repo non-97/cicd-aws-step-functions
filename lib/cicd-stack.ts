@@ -155,6 +155,7 @@ export class CicdStack extends Stack {
           "logs:DeleteLogGroup",
           "logs:DescribeLogGroups",
           "logs:ListTagsLogGroup",
+          "logs:PutRetentionPolicy",
         ],
       })
     );

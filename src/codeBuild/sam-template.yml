@@ -66,6 +66,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName : !Sub '/aws/vendedlogs/states/${StateMachineName}-${StackIdAfterStackName}-Logs'
+      RetentionInDays: 731
 
   StateMachineRole:
     Type: AWS::IAM::Role
@@ -80,8 +81,45 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+      Policies:
+        - PolicyDocument: {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "logs:CreateLogDelivery",
+                          "logs:GetLogDelivery",
+                          "logs:UpdateLogDelivery",
+                          "logs:DeleteLogDelivery",
+                          "logs:ListLogDeliveries",
+                          "logs:PutResourcePolicy",
+                          "logs:DescribeResourcePolicies",
+                          "logs:DescribeLogGroups"
+                      ],
+                      "Resource": "*"
+                  }
+              ]
+          }
+          PolicyName: CloudWatchLogsDeliveryFullAccessPolicy
+        - PolicyDocument: {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Action": [
+                          "xray:PutTraceSegments",
+                          "xray:PutTelemetryRecords",
+                          "xray:GetSamplingRules",
+                          "xray:GetSamplingTargets"
+                      ],
+                      "Resource": [
+                          "*"
+                      ]
+                  }
+              ]
+          }
+          PolicyName: XRayAccessPolicy
 
   ScheduledRule: 
     Condition: IsCron
