@@ -5,6 +5,10 @@ Manage the CI/CD environment for AWS Step Functions using AWS CDK.
 ## Usage
 
 ```bash
+git clone https://github.com/non-97/cicd-aws-step-functions.git
+
+cd cicd-aws-step-functions
+
 npm install
 
 # Enter the AWS account and the Webhook URL to be used for notifications in .env.
@@ -72,3 +76,11 @@ npx cdk deploy --all
 │   └── cicd-aws-step-functions.test.ts
 └── tsconfig.json
 ```
+
+Detailed Description
+
+- [AWS CDKでAWS Step FunctionsのCI/CD環境を作ってみた](https://dev.classmethod.jp/etc/cicd-of-aws-step…ons-with-aws-cdk/)
+- [[AWS Step Functions] 1日1回までしか処理をしないようにステートマシンを制御してみた](https://dev.classmethod.jp/articles/control-the-state-machine-to-run-only-once-a-day/)
+- [[AWS Step Functions] タスクの開始時刻を制御してみた](https://dev.classmethod.jp/articles/aws-step-functions-control-start-time-of-task/)
+- [[AWS CDK] APIを呼び出すだけのカスタムリソースならLambda関数は不要な件](https://dev.classmethod.jp/articles/create-custom-resources-with-aws-cdk-without-using-lambda-functions/)
+- [CodeCommitのPull Request関連のイベントをSlackに通知してみた](https://dev.classmethod.jp/articles/notify-slack-of-events-related-to-codecommit-pull-requests/)
