@@ -23,7 +23,7 @@ vi .env
 npx cdk deploy --all
 ```
 
-## Directorys
+## Directory
 
 ```bash
 .
@@ -57,9 +57,7 @@ npx cdk deploy --all
 │   │   ├── git-template
 │   │   │   ├── README.md
 │   │   │   ├── StateMachineSettings.yml
-│   │   │   ├── StateMachineWorkFlow.asl.json
-│   │   │   ├── prd
-│   │   │   └── stg
+│   │   │   └── StateMachineWorkFlow.asl.js
 │   │   └── git-template.zip
 │   ├── ec2
 │   │   └── userDataAmazonLinux2.sh
