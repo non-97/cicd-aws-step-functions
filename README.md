@@ -79,7 +79,7 @@ npx cdk deploy --all
 
 Detailed Description
 
-- [AWS CDKでAWS Step FunctionsのCI/CD環境を作ってみた](https://dev.classmethod.jp/etc/cicd-of-aws-step…ons-with-aws-cdk/)
+- [AWS CDKでAWS Step FunctionsのCI/CD環境を作ってみた](https://dev.classmethod.jp/articles/cicd-of-aws-step-functions-with-aws-cdk/)
 - [[AWS Step Functions] 1日1回までしか処理をしないようにステートマシンを制御してみた](https://dev.classmethod.jp/articles/control-the-state-machine-to-run-only-once-a-day/)
 - [[AWS Step Functions] タスクの開始時刻を制御してみた](https://dev.classmethod.jp/articles/aws-step-functions-control-start-time-of-task/)
 - [[AWS CDK] APIを呼び出すだけのカスタムリソースならLambda関数は不要な件](https://dev.classmethod.jp/articles/create-custom-resources-with-aws-cdk-without-using-lambda-functions/)
