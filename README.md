@@ -77,7 +77,7 @@ npx cdk deploy --all
 └── tsconfig.json
 ```
 
-Detailed Description
+## Detailed Description
 
 - [AWS CDKでAWS Step FunctionsのCI/CD環境を作ってみた](https://dev.classmethod.jp/articles/cicd-of-aws-step-functions-with-aws-cdk/)
 - [[AWS Step Functions] 1日1回までしか処理をしないようにステートマシンを制御してみた](https://dev.classmethod.jp/articles/control-the-state-machine-to-run-only-once-a-day/)
