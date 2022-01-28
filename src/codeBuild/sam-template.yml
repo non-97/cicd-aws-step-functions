@@ -9,7 +9,7 @@ Parameters:
   StateMachineName:
     Description: Please type the Step Functions State Machine Name.
     Type: String
-    Default: 'sfn-sam-app-statemachine'
+    Default: 'sfn-sam-state-machine'
   StackIdAfterStackName:
     Description: Please type the Stack ID after Stack Name.
     Type: String
@@ -29,6 +29,10 @@ Parameters:
         "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
       }
     }'
+  EventBusArn:
+    Description: Please type the Event Bus ARN.
+    Type: String
+    Default: 'arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default'
   TargetEventBusArnAfterExecution:
     Description: Please type the target event bus arn after execution.
     Type: String
@@ -69,6 +73,10 @@ Conditions:
   ExistsEventPattern: !Not 
     - !Equals
       - !Sub ${EventPattern}
+      - "null"
+  ExistsEventBusArn: !Not 
+    - !Equals
+      - !Sub ${EventBusArn}
       - "null"
   ExistsTargetEventBusArnAfterExecution: !Not 
     - !Equals
@@ -183,6 +191,10 @@ Resources:
     Properties: 
       Description: EventPatternRule
       EventPattern: !Sub ${EventPattern}
+      EventBusName: !If
+        - ExistsEventBusArn
+        - !Sub ${EventBusArn}
+        - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default
       State: ENABLED
       Targets: 
         - Arn: !Ref StateMachine

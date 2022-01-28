@@ -13,6 +13,9 @@ echo CRON : "'$CRON'"
 EVENT_PATTERN=`yq -r ".Settings.event_pattern" StateMachineSettings.yml`
 echo EVENT_PATTERN : "'$EVENT_PATTERN'"
 
+EVENT_BUS_ARN=`yq -r ".Settings.event_bus_arn" StateMachineSettings.yml`
+echo EVENT_BUS_ARN : "'$EVENT_BUS_ARN'"
+
 TARGET_EVENT_BUS_ARN_AFTER_EXECUTION=`yq -r ".Settings.target_event_bus_arn_after_execution" StateMachineSettings.yml`
 echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : "'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'"
 

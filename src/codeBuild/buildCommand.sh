@@ -11,6 +11,7 @@ STACK_ID_AFTER_STACK_NAME="$5"
 
 echo CRON : "'$CRON'"
 echo EVENT_PATTERN : "'$EVENT_PATTERN'"
+echo EVENT_BUS_ARN : "'$EVENT_BUS_ARN'"
 echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : "'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'"
 echo XRAY_TRACING : "'$XRAY_TRACING'"
 echo IAM_POLICY_DOCUMENT : $IAM_POLICY_DOCUMENT
@@ -43,6 +44,7 @@ if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
         StackIdAfterStackName=$STACK_ID_AFTER_STACK_NAME \
         Cron="'$CRON'" \
         EventPattern="'$EVENT_PATTERN'" \
+        EventBusArn="'$EVENT_BUS_ARN'" \
         TargetEventBusArnAfterExecution="'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'" \
         XRayTracing="'$XRAY_TRACING'" \
         IamPolicyDocument="'$IAM_POLICY_DOCUMENT'" \
@@ -60,6 +62,7 @@ if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
         StackIdAfterStackName=$STACK_ID_AFTER_STACK_NAME \
         Cron="'$CRON'" \
         EventPattern="'$EVENT_PATTERN'" \
+        EventBusArn="'$EVENT_BUS_ARN'" \
         TargetEventBusArnAfterExecution="'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'" \
         XRayTracing="'$XRAY_TRACING'" \
         IamPolicyDocument="'$IAM_POLICY_DOCUMENT'"
