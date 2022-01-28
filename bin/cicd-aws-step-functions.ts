@@ -49,7 +49,7 @@ const roleStack = new RoleStack(app, "RoleStack", {
 // It is used for accepting events from other accounts
 new EventBusStack(app, "StateMachineEventBusStack", {
   eventBusName: "StateMachineEventBus",
-  sourceAccounts: process.env.SOURCE_ACCOUNTS,
+  eventsSourceAccounts: process.env.EVENTS_SOURCE_ACCOUNTS,
 });
 
 // Stack of Lambda functions to notify events of AWS Step Functions CI/CD
