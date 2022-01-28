@@ -3,32 +3,41 @@
 # -x to display the command to be executed
 set -x
 
-bucket_name="$1"
-sam_file_name="$2"
+BUCKET_NAME="$1"
+SAM_FILE_NAME="$2"
 
 
-CRON=`yq -r '.Settings.cron' StateMachineSettings.yml`
+CRON=`yq -r ".Settings.cron" StateMachineSettings.yml`
 echo CRON : "'$CRON'"
 
-EVENT_PATTERN=`yq -r '.Settings.event_pattern' StateMachineSettings.yml`
+EVENT_PATTERN=`yq -r ".Settings.event_pattern" StateMachineSettings.yml`
 echo EVENT_PATTERN : "'$EVENT_PATTERN'"
 
-TARGET_EVENT_BUS_ARN_AFTER_EXECUTION=`yq -r '.Settings.target_event_bus_arn_after_execution' StateMachineSettings.yml`
+TARGET_EVENT_BUS_ARN_AFTER_EXECUTION=`yq -r ".Settings.target_event_bus_arn_after_execution" StateMachineSettings.yml`
 echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : "'$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION'"
 
-XRAY_TRACING=`yq -r '.Settings.xray_tracing' StateMachineSettings.yml`
+XRAY_TRACING=`yq -r ".Settings.xray_tracing" StateMachineSettings.yml`
 echo XRAY_TRACING : "'$XRAY_TRACING'"
 
-IAM_POLICY_DOCUMENT=`yq -r '.Settings.iam_policy_document' StateMachineSettings.yml`
+IAM_POLICY_DOCUMENT=`yq -r ".Settings.iam_policy_document" StateMachineSettings.yml`
 echo IAM_POLICY_DOCUMENT : "'$IAM_POLICY_DOCUMENT'"
 
+TAGS_LENGTH=`yq -r ".Settings.tags[].Key" StateMachineSettings.yml | wc -l`
+echo TAGS_LENGTH : $TAGS_LENGTH
+
+for i in `seq 0 $((${TAGS_LENGTH} - 1))`; do
+  KEY=`yq -r ".Settings.tags[${i}].Key" StateMachineSettings.yml`
+  VALUE=`yq -r ".Settings.tags[${i}].Value" StateMachineSettings.yml`
+  TAGS_LIST+=`echo "'$KEY'"="'$VALUE' "`
+done
+echo TAGS_LIST : "'$TAGS_LIST'"
 
 # Download the AWS SAM template file from the S3 bucket
-aws s3 cp s3://$bucket_name/$sam_file_name $sam_file_name
+aws s3 cp s3://$BUCKET_NAME/$SAM_FILE_NAME $SAM_FILE_NAME
 
 cat StateMachineWorkFlow.asl.json
 
 # Move the necessary files to the AWS SAM directory
 mkdir -p sam-sfn/statemachine
 cp -p StateMachineWorkFlow.asl.json ./sam-sfn/statemachine/StateMachineWorkFlow.asl.json
-cp -p $sam_file_name ./sam-sfn/$sam_file_name
+cp -p $SAM_FILE_NAME ./sam-sfn/$SAM_FILE_NAME

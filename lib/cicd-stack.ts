@@ -114,6 +114,7 @@ export class CicdStack extends Stack {
           "states:DescribeStateMachine",
           "states:UpdateStateMachine",
           "states:TagResource",
+          "states:UntagResource",
         ],
       })
     );
@@ -133,6 +134,7 @@ export class CicdStack extends Stack {
           "iam:PassRole",
           "iam:PutRolePolicy",
           "iam:TagRole",
+          "iam:UntagRole",
         ],
       })
     );
@@ -154,6 +156,8 @@ export class CicdStack extends Stack {
           "logs:DescribeLogGroups",
           "logs:ListTagsLogGroup",
           "logs:PutRetentionPolicy",
+          "logs:TagLogGroup",
+          "logs:UntagLogGroup",
         ],
       })
     );
@@ -188,6 +192,8 @@ export class CicdStack extends Stack {
           "events:PutTargets",
           "events:PutRule",
           "events:RemoveTargets",
+          "events:TagResource",
+          "events:UntagResource",
         ],
       })
     );
