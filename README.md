@@ -24,6 +24,8 @@ npm install
 # SOURCE_ACCOUNTS=["12345678901y","12345678901z"]
 vi .env
 
+npx cdk bootstrap
+
 npx cdk deploy --all
 ```
 
