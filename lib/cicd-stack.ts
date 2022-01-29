@@ -38,11 +38,11 @@ export class CicdStack extends Stack {
     super(scope, id, props);
 
     // Get the string after the stack name in the stack id to append to the end of the Log Group name to make it unique
-    const stackIdAfterStackName = Fn.select(2, Fn.split("/", this.stackId));
+    const stackUniqueId = Fn.select(2, Fn.split("/", this.stackId));
 
     // CloudWatch Logs for CodeBuild Logs
     const codeBuildLogGroup = new logs.LogGroup(this, "CodeBuildLogGroup", {
-      logGroupName: `/aws/vendedlogs/codebuild/${props.stateMachineName}-${stackIdAfterStackName}-Logs`,
+      logGroupName: `/aws/vendedlogs/codebuild/${props.stateMachineName}-${stackUniqueId}-Logs`,
       retention: logs.RetentionDays.TWO_WEEKS,
     });
 
@@ -82,7 +82,7 @@ export class CicdStack extends Stack {
           build: {
             commands: [
               `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${this.stackName} ${props.stateMachineName} ${stackIdAfterStackName}`,
+              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${this.stackName} ${props.stateMachineName} ${stackUniqueId}`,
             ],
           },
           post_build: {

@@ -9,15 +9,15 @@ Parameters:
   StateMachineName:
     Description: Please type the Step Functions State Machine Name.
     Type: String
-    Default: 'sfn-sam-state-machine'
-  StackIdAfterStackName:
-    Description: Please type the Stack ID after Stack Name.
+    Default: sfn-sam-state-machine
+  StackUniqueId:
+    Description: Please type the Stack unique ID.
     Type: String
-    Default: 'xxxxxxx'
+    Default: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   Cron:
     Description: Please type the Cron.
     Type: String
-    Default: 'cron(0 15 * * ? *)'
+    Default: cron(0 15 * * ? *)
   EventPattern:
     Description: Please type the EventPattern.
     Type: String
@@ -32,11 +32,11 @@ Parameters:
   EventBusArn:
     Description: Please type the Event Bus ARN.
     Type: String
-    Default: 'arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default'
+    Default: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
   TargetEventBusArnAfterExecution:
     Description: Please type the target event bus arn after execution.
     Type: String
-    Default: 'arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default'
+    Default: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
   XRayTracing:
     Description: Please type the AWS X-Ray trace to enable or not.
     Type: String
@@ -95,7 +95,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Name: !Sub ${StateMachineName}
-      DefinitionUri: statemachine/StateMachineWorkFlow.asl.json
+      DefinitionUri: state_machine/StateMachineWorkFlow.asl.json
       Role: !GetAtt StateMachineRole.Arn
       Logging:
         Level: ALL
@@ -109,7 +109,7 @@ Resources:
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName : !Sub '/aws/vendedlogs/states/${StateMachineName}-${StackIdAfterStackName}-Logs'
+      LogGroupName : !Sub '/aws/vendedlogs/states/${StateMachineName}-${StackUniqueId}-Logs'
       RetentionInDays: 731
 
   StateMachineRole:

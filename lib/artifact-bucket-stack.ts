@@ -28,7 +28,14 @@ export class ArtifactBucketStack extends Stack {
 
     this.artifactBucket.addToResourcePolicy(
       new iam.PolicyStatement({
-        actions: ["s3:GetObject*", "s3:GetBucket*", "s3:List*", "s3:PutObject"],
+        actions: [
+          "s3:GetObject*",
+          "s3:GetBucket*",
+          "s3:List*",
+          "s3:DeleteObject*",
+          "s3:PutObject",
+          "s3:Abort*",
+        ],
         resources: [
           `${this.artifactBucket.bucketArn}`,
           `${this.artifactBucket.bucketArn}/*`,
