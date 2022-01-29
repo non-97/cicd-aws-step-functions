@@ -1,6 +1,7 @@
 # Example
 #
 # Settings:
+#   deployment_destination_account_iam_role_arn: arn:aws:iam::<AWS Account ID>:role/SamDeployRoleStack-SamDeployRole-xxxx
 #   cron: cron(15 10 * * ? *)
 #   event_pattern: {
 #     "source": ["aws.states"],
@@ -38,6 +39,7 @@
 #       Value: production
   
 Settings:
+  deployment_destination_account_iam_role_arn: 
   cron: 
   event_pattern: 
   event_bus_arn: 

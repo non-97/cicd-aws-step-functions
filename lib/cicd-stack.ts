@@ -216,6 +216,13 @@ export class CicdStack extends Stack {
         actions: ["cloudformation:CreateChangeSet"],
       })
     );
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        resources: ["*"],
+        actions: ["sts:AssumeRole"],
+      })
+    );
 
     // CodePipeline Artifacts
     const sourceOutput = new codepipeline.Artifact();

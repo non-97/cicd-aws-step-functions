@@ -6,6 +6,8 @@ set -x
 BUCKET_NAME="$1"
 SAM_FILE_NAME="$2"
 
+DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN=`yq -r ".Settings.deployment_destination_account_iam_role_arn" StateMachineSettings.yml`
+echo DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN : $DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN
 
 CRON=`yq -r ".Settings.cron" StateMachineSettings.yml`
 echo CRON : "'$CRON'"

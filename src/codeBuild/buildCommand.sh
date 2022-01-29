@@ -9,6 +9,7 @@ STACK_NAME="$3"
 STATE_MACHINE_NAME="$4"
 STACK_ID_AFTER_STACK_NAME="$5"
 
+echo DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN : $DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN
 echo CRON : "'$CRON'"
 echo EVENT_PATTERN : "'$EVENT_PATTERN'"
 echo EVENT_BUS_ARN : "'$EVENT_BUS_ARN'"
@@ -20,6 +21,18 @@ echo TAGS_LIST : "'$TAGS_LIST'"
 cd sam-sfn
 
 ls -l ./statemachine/StateMachineWorkFlow.asl.json
+
+if [ -n "$DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN" ]; then
+  BEFORE=`aws sts get-caller-identity | jq -r .Arn`
+  OUTPUT=`aws sts assume-role --role-arn ${DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN} --role-session-name sam-deploy-session`
+
+  AWS_ACCESS_KEY_ID=`echo $OUTPUT | jq -r .Credentials.AccessKeyId`
+  AWS_SECRET_ACCESS_KEY=`echo $OUTPUT | jq -r .Credentials.SecretAccessKey`
+  AWS_SESSION_TOKEN=`echo $OUTPUT | jq -r .Credentials.SessionToken`
+  # AWS_ACCOUNTID=$DEPLOYMENT_DESTINATION_ACCOUNT
+
+  after=`aws sts get-caller-identity | jq -r .Arn`
+fi
 
 if [ -s ./statemachine/StateMachineWorkFlow.asl.json ]; then
   sam build \

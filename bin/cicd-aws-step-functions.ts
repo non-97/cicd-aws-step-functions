@@ -5,6 +5,7 @@ import * as cdk from "aws-cdk-lib";
 import { SfnTemplateBucketStack } from "../lib/sfn-template-bucket-stack";
 import { ArtifactBucketStack } from "../lib/artifact-bucket-stack";
 import { RoleStack } from "../lib/role-stack";
+import { SamDeployRoleStack } from "../lib/sam-deploy-role-stack";
 import { EventBusStack } from "../lib/event-bus-stack";
 import { NoticeSfnCicdEventsFunctionStack } from "../lib/notice-sfn-cicd-events-function-stack";
 import { WorkflowSupportFunctionStack } from "../lib/workflow-support-function-stack";
@@ -38,12 +39,24 @@ const sfnTemplateBucketStack = new SfnTemplateBucketStack(
 );
 
 // Stack of S3 buckets for CodeBuild artifacts
-const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
+const artifactBucketStack = new ArtifactBucketStack(
+  app,
+  "ArtifactBucketStack",
+  {
+    deploymentDestinationAccount: process.env.DEPLOYMENT_DESTINATION_ACCOUNT,
+  }
+);
 
 // Stack of IAM roles and CodeCommit approval rule templates for each role
 const roleStack = new RoleStack(app, "RoleStack", {
   jumpAccount: process.env.JUMP_ACCOUNT,
 });
+
+if (typeof process.env.DEPLOYMENT_CONTROL_ACCOUNT != "undefined") {
+  const samDeployRoleStack = new SamDeployRoleStack(app, "SamDeployRoleStack", {
+    deploymentControlAccount: process.env.DEPLOYMENT_CONTROL_ACCOUNT,
+  });
+}
 
 // Stack of Event Bus
 // It is used for accepting events from other accounts
