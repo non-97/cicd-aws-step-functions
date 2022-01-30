@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import "source-map-support/register";
-import "dotenv/config";
+import * as dotenv from "dotenv";
 import * as cdk from "aws-cdk-lib";
 import { SfnTemplateBucketStack } from "../lib/sfn-template-bucket-stack";
 import { ArtifactBucketStack } from "../lib/artifact-bucket-stack";
@@ -12,6 +12,8 @@ import { WorkflowSupportFunctionStack } from "../lib/workflow-support-function-s
 import { CicdStack } from "../lib/cicd-stack";
 import { Ec2InstancesStack } from "../lib/ec2-instances-stack";
 
+dotenv.config({ multiline: true });
+
 const app = new cdk.App();
 
 // If the variable specified by dotenv is not defined, the process is aborted
@@ -19,7 +21,9 @@ if (
   typeof process.env.APP_TEAM_WEBHOOK_URL == "undefined" ||
   typeof process.env.APP_TEAM_MANAGER_WEBHOOK_URL == "undefined" ||
   typeof process.env.INFRA_TEAM_WEBHOOK_URL == "undefined" ||
-  typeof process.env.JUMP_ACCOUNT == "undefined"
+  typeof process.env.APP_TEAM_IAM_USER_ARN == "undefined" ||
+  typeof process.env.APP_TEAM_MANAGER_IAM_USER_ARN == "undefined" ||
+  typeof process.env.INFRA_TEAM_IAM_USER_ARN == "undefined"
 ) {
   console.error(`
     There is not enough input in the .env file.
@@ -49,7 +53,18 @@ const artifactBucketStack = new ArtifactBucketStack(
 
 // Stack of IAM roles and CodeCommit approval rule templates for each role
 const roleStack = new RoleStack(app, "RoleStack", {
-  jumpAccount: process.env.JUMP_ACCOUNT,
+  appTeamIamUserArns: process.env.APP_TEAM_IAM_USER_ARN.replace(
+    /\s+/g,
+    ""
+  ).split(","),
+  appTeamManagerIamUserArns: process.env.APP_TEAM_MANAGER_IAM_USER_ARN.replace(
+    /\s+/g,
+    ""
+  ).split(","),
+  infraTeamIamUserArns: process.env.INFRA_TEAM_IAM_USER_ARN.replace(
+    /\s+/g,
+    ""
+  ).split(","),
 });
 
 if (typeof process.env.DEPLOYMENT_CONTROL_ACCOUNT != "undefined") {

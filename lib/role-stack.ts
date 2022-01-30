@@ -8,7 +8,9 @@ import {
 } from "aws-cdk-lib";
 
 interface RoleStackProps extends StackProps {
-  jumpAccount: string;
+  appTeamIamUserArns: string[];
+  appTeamManagerIamUserArns: string[];
+  infraTeamIamUserArns: string[];
 }
 
 export class RoleStack extends Stack {
@@ -43,9 +45,17 @@ export class RoleStack extends Stack {
       }
     );
 
-    // IAM roles for the app team
+    // IAM Role for the app team
     const appTeamIamRole = new iam.Role(this, "AppTeamIamRole", {
-      assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
+      assumedBy: new iam.CompositePrincipal(
+        ...((): iam.IPrincipal[] => {
+          const principals: iam.IPrincipal[] = new Array();
+          props.appTeamIamUserArns.forEach((appTeamIamUserArn) => {
+            principals.push(new iam.ArnPrincipal(appTeamIamUserArn));
+          });
+          return principals;
+        })()
+      ).withConditions({
         Bool: {
           "aws:MultiFactorAuthPresent": "true",
         },
@@ -56,9 +66,19 @@ export class RoleStack extends Stack {
       ],
     });
 
-    // IAM role of the app team manager
+    // IAM Role for the app team manager
     const appTeamManagerIamRole = new iam.Role(this, "AppTeamManagerIamRole", {
-      assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
+      assumedBy: new iam.CompositePrincipal(
+        ...((): iam.IPrincipal[] => {
+          const principals: iam.IPrincipal[] = new Array();
+          props.appTeamManagerIamUserArns.forEach(
+            (appTeamManagerIamUserArn) => {
+              principals.push(new iam.ArnPrincipal(appTeamManagerIamUserArn));
+            }
+          );
+          return principals;
+        })()
+      ).withConditions({
         Bool: {
           "aws:MultiFactorAuthPresent": "true",
         },
@@ -69,9 +89,17 @@ export class RoleStack extends Stack {
       ],
     });
 
-    // IAM roles for the infrastructure team
+    // IAM Role for the infra team
     const infraTeamIamRole = new iam.Role(this, "InfraTeamIamRole", {
-      assumedBy: new iam.AccountPrincipal(props.jumpAccount).withConditions({
+      assumedBy: new iam.CompositePrincipal(
+        ...((): iam.IPrincipal[] => {
+          const principals: iam.IPrincipal[] = new Array();
+          props.infraTeamIamUserArns.forEach((infraTeamIamUserArn) => {
+            principals.push(new iam.ArnPrincipal(infraTeamIamUserArn));
+          });
+          return principals;
+        })()
+      ).withConditions({
         Bool: {
           "aws:MultiFactorAuthPresent": "true",
         },
