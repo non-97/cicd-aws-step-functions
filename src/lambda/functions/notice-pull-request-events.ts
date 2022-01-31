@@ -3,8 +3,10 @@ import {
   GetPullRequestCommand,
   GetCommentsForPullRequestCommand,
 } from "@aws-sdk/client-codecommit";
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import * as util from "util";
+
+import { OriginalEventBase } from "./event-bridge";
+import { SlackMessage, postSlackMessage } from "./slack";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codecommit/latest/userguide/monitoring-events.html#pullRequestCreated
 // - commentOnPullRequestCreated Event
@@ -17,172 +19,132 @@ import * as util from "util";
 
 // Interface for the following events
 // - commentOnPullRequestCreated Event
-interface CommentOnPullRequestCreatedDetailEvent {
-  afterCommitId: string;
-  beforeCommitId: string;
-  callerUserArn: string;
-  commentId: string;
-  displayName: string;
-  emailAddress: string;
-  event: string;
-  inReplyTo: string;
-  notificationBody: string;
-  pullRequestId: string;
-  repositoryId: string;
-  repositoryName: string;
+interface CommentOnPullRequestCreatedDetailEvent extends OriginalEventBase {
+  detail: {
+    afterCommitId: string;
+    beforeCommitId: string;
+    callerUserArn: string;
+    commentId: string;
+    displayName: string;
+    emailAddress: string;
+    event: string;
+    inReplyTo: string;
+    notificationBody: string;
+    pullRequestId: string;
+    repositoryId: string;
+    repositoryName: string;
+  };
 }
 
 // Interface for the following events
 // - commentOnPullRequestUpdated Event
-interface CommentOnPullRequestUpdatedDetailEvent {
-  afterCommitId: string;
-  beforeCommitId: string;
-  callerUserArn: string;
-  commentId: string;
-  event: string;
-  inReplyTo: string;
-  notificationBody: string;
-  pullRequestId: string;
-  repositoryId: string;
-  repositoryName: string;
+interface CommentOnPullRequestUpdatedDetailEvent extends OriginalEventBase {
+  detail: {
+    afterCommitId: string;
+    beforeCommitId: string;
+    callerUserArn: string;
+    commentId: string;
+    event: string;
+    inReplyTo: string;
+    notificationBody: string;
+    pullRequestId: string;
+    repositoryId: string;
+    repositoryName: string;
+  };
 }
 
 // Interface for the following events
 // - pullRequestCreated Event
 // - pullRequestSourceBranchUpdated Event
 // - pullRequestStatusChanged Event
-interface PullRequestDetailEvent {
-  author: string;
-  callerUserArn: string;
-  creationDate: string;
-  description: string;
-  destinationCommit: string;
-  destinationReference: string;
-  event: string;
-  isMerged: string;
-  lastModifiedDate: string;
-  notificationBody: string;
-  pullRequestId: string;
-  pullRequestStatus: string;
-  repositoryNames: string[];
-  revisionId: string;
-  sourceCommit: string;
-  sourceReference: string;
-  title: string;
+interface PullRequestDetailEvent extends OriginalEventBase {
+  detail: {
+    author: string;
+    callerUserArn: string;
+    creationDate: string;
+    description: string;
+    destinationCommit: string;
+    destinationReference: string;
+    event: string;
+    isMerged: string;
+    lastModifiedDate: string;
+    notificationBody: string;
+    pullRequestId: string;
+    pullRequestStatus: string;
+    repositoryNames: string[];
+    revisionId: string;
+    sourceCommit: string;
+    sourceReference: string;
+    title: string;
+  };
 }
 
 // Interface for the following events
 // - pullRequestMergeStatusUpdated Event
-interface PullRequestMergeStatusUpdatedDetailEvent {
-  author: string;
-  callerUserArn: string;
-  creationDate: string;
-  description: string;
-  destinationCommit: string;
-  destinationReference: string;
-  event: string;
-  isMerged: string;
-  lastModifiedDate: string;
-  mergeOption: string;
-  notificationBody: string;
-  pullRequestId: string;
-  pullRequestStatus: string;
-  repositoryNames: string[];
-  revisionId: string;
-  sourceCommit: string;
-  sourceReference: string;
-  title: string;
+interface PullRequestMergeStatusUpdatedDetailEvent extends OriginalEventBase {
+  detail: {
+    author: string;
+    callerUserArn: string;
+    creationDate: string;
+    description: string;
+    destinationCommit: string;
+    destinationReference: string;
+    event: string;
+    isMerged: string;
+    lastModifiedDate: string;
+    mergeOption: string;
+    notificationBody: string;
+    pullRequestId: string;
+    pullRequestStatus: string;
+    repositoryNames: string[];
+    revisionId: string;
+    sourceCommit: string;
+    sourceReference: string;
+    title: string;
+  };
 }
 
 // Interface for the following events
 // - pullRequestApprovalStateChanged Event
-interface PullRequestApprovalStateChangedDetailEvent {
-  approvalStatus: string;
-  author: string;
-  callerUserArn: string;
-  creationDate: string;
-  description: string;
-  destinationCommit: string;
-  destinationReference: string;
-  event: string;
-  isMerged: string;
-  lastModifiedDate: string;
-  notificationBody: string;
-  pullRequestId: string;
-  pullRequestStatus: string;
-  repositoryNames: string[];
-  revisionId: string;
-  sourceCommit: string;
-  sourceReference: string;
-  title: string;
-}
-
-interface CodeCommitEvent {
-  originalEvent: {
-    version: string;
-    id: string;
-    "detail-type": string;
-    source: string;
-    account: string;
-    time: string;
-    region: string;
-    resources: string[];
-    detail:
-      | CommentOnPullRequestCreatedDetailEvent
-      | CommentOnPullRequestUpdatedDetailEvent
-      | PullRequestDetailEvent
-      | PullRequestMergeStatusUpdatedDetailEvent
-      | PullRequestApprovalStateChangedDetailEvent;
+interface PullRequestApprovalStateChangedDetailEvent extends OriginalEventBase {
+  detail: {
+    approvalStatus: string;
+    author: string;
+    callerUserArn: string;
+    creationDate: string;
+    description: string;
+    destinationCommit: string;
+    destinationReference: string;
+    event: string;
+    isMerged: string;
+    lastModifiedDate: string;
+    notificationBody: string;
+    pullRequestId: string;
+    pullRequestStatus: string;
+    repositoryNames: string[];
+    revisionId: string;
+    sourceCommit: string;
+    sourceReference: string;
+    title: string;
   };
-  noticeTargets: { [key: string]: string[] }[];
 }
 
-interface SlackMessage {
-  blocks: {
-    type: string;
-    block_id?: string;
-    text?: { type: string; text: string };
-    fields?: { type: string; text: string }[];
-  }[];
+interface HandlerParameters {
+  originalEvent:
+    | CommentOnPullRequestCreatedDetailEvent
+    | CommentOnPullRequestUpdatedDetailEvent
+    | PullRequestDetailEvent
+    | PullRequestMergeStatusUpdatedDetailEvent
+    | PullRequestApprovalStateChangedDetailEvent;
+  noticeTargets: { [key: string]: string[] }[];
 }
 
 // Number of characters limit for slack
 // Ref: https://api.slack.com/reference/block-kit/blocks#section_fields
 const characterLimit = 2000;
 
-// Function to request Slack
-const requestSlack = async (
-  slackWebhookUrl: string,
-  slackMessage: SlackMessage
-) => {
-  return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
-    // Request parameters
-    const options: AxiosRequestConfig = {
-      url: slackWebhookUrl,
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      data: slackMessage,
-    };
-
-    // Request Slack
-    axios(options)
-      .then((response) => {
-        console.log(
-          `response data : ${JSON.stringify(response.data, null, 2)}`
-        );
-        resolve(response);
-      })
-      .catch((error) => {
-        console.error(`response error : ${JSON.stringify(error, null, 2)}`);
-        reject(error);
-      });
-  });
-};
-
 export const handler = async (
-  event: CodeCommitEvent
+  event: HandlerParameters
 ): Promise<string | null | Error> => {
   // If the required environment variables do not exist, the process is exited
   if (!process.env["REGION"]) {
@@ -437,7 +399,7 @@ export const handler = async (
   )) {
     const responses = await Promise.all(
       slackWebhookUrls.map((slackWebhookUrl) =>
-        requestSlack(slackWebhookUrl, slackMessage)
+        postSlackMessage(slackWebhookUrl, slackMessage)
       )
     );
     return util.inspect(responses);

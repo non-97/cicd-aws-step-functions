@@ -1,75 +1,30 @@
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import * as util from "util";
 
+import { OriginalEventBase } from "./event-bridge";
+import { SlackMessage, postSlackMessage } from "./slack";
+
 // Ref: https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/cw-events.html
-interface CodeCommitEvent {
-  originalEvent: {
-    version: string;
-    id: string;
-    "detail-type": string;
-    source: string;
-    account: string;
-    time: string;
-    region: string;
-    resources: string[];
-    detail: {
-      executionArn: string;
-      stateMachineArn: string;
-      name: string;
-      status: string;
-      startDate: number | null;
-      stopDate: number | null;
-      input: any;
-      inputDetails: any;
-      output: any;
-      outputDetails: any;
-    };
+interface CodeCommitOriginalEvent extends OriginalEventBase {
+  detail: {
+    executionArn: string;
+    stateMachineArn: string;
+    name: string;
+    status: string;
+    startDate: number | null;
+    stopDate: number | null;
+    input: any;
+    inputDetails: any;
+    output: any;
+    outputDetails: any;
   };
+}
+interface HandlerParameters {
+  originalEvent: CodeCommitOriginalEvent;
   slackWebhookUrls: string[];
 }
 
-interface SlackMessage {
-  blocks: {
-    type: string;
-    block_id?: string;
-    text?: { type: string; text: string };
-    fields?: { type: string; text: string }[];
-  }[];
-}
-
-// Function to request Slack
-const requestSlack = async (
-  slackWebhookUrl: string,
-  slackMessage: SlackMessage
-) => {
-  return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
-    // Request parameters
-    const options: AxiosRequestConfig = {
-      url: slackWebhookUrl,
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      data: slackMessage,
-    };
-
-    // Request Slack
-    axios(options)
-      .then((response) => {
-        console.log(
-          `response data : ${JSON.stringify(response.data, null, 2)}`
-        );
-        resolve(response);
-      })
-      .catch((error) => {
-        console.error(`response error : ${JSON.stringify(error, null, 2)}`);
-        reject(error);
-      });
-  });
-};
-
 export const handler = async (
-  event: CodeCommitEvent
+  event: HandlerParameters
 ): Promise<string | Error> => {
   // If the required environment variables do not exist, the process is exited
   if (
@@ -194,7 +149,7 @@ export const handler = async (
   // Send a message to the specified Slack webhook URL
   const responses = await Promise.all(
     event.slackWebhookUrls.map((slackWebhookUrl) =>
-      requestSlack(slackWebhookUrl, slackMessage)
+      postSlackMessage(slackWebhookUrl, slackMessage)
     )
   );
 
