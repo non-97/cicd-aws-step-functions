@@ -3,7 +3,7 @@ import { Stack, StackProps, aws_events as events } from "aws-cdk-lib";
 
 interface EventBusStackProps extends StackProps {
   eventBusName: string;
-  eventsSourceAccounts: string | undefined;
+  eventsSourceAccounts: string[] | undefined;
 }
 
 export class EventBusStack extends Stack {
@@ -19,7 +19,7 @@ export class EventBusStack extends Stack {
     if (typeof props?.eventsSourceAccounts == "undefined") process.exit(0);
 
     // Add to the policy principal the number of AWS accounts that access the Event Bus
-    JSON.parse(props.eventsSourceAccounts).forEach((sourceAccount: string) => {
+    props.eventsSourceAccounts.forEach((sourceAccount: string) => {
       new events.CfnEventBusPolicy(
         this,
         `CrossAccountPolicy_${sourceAccount}`,

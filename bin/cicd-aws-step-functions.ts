@@ -77,7 +77,10 @@ if (typeof process.env.DEPLOYMENT_CONTROL_ACCOUNT != "undefined") {
 // It is used for accepting events from other accounts
 new EventBusStack(app, "StateMachineEventBusStack", {
   eventBusName: "StateMachineEventBus",
-  eventsSourceAccounts: process.env.EVENTS_SOURCE_ACCOUNTS,
+  eventsSourceAccounts: process.env.EVENTS_SOURCE_ACCOUNTS?.replace(
+    /\s+/g,
+    ""
+  ).split(","),
 });
 
 // Stack of Lambda functions to notify events of AWS Step Functions CI/CD
