@@ -82,7 +82,7 @@ export class CicdStack extends Stack {
           build: {
             commands: [
               `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${this.stackName} ${props.stateMachineName} ${stackUniqueId}`,
+              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId}`,
             ],
           },
           post_build: {

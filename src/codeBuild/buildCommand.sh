@@ -5,9 +5,8 @@ set -x
 
 BUCKET_NAME="$1"
 SAM_FILE_NAME="$2"
-STACK_NAME="$3"
-STATE_MACHINE_NAME="$4"
-STACK_UNIQUE_ID="$5"
+STATE_MACHINE_NAME="$3"
+STACK_UNIQUE_ID="$4"
 
 echo DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN : $DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN
 echo CRON : "'$CRON'"
@@ -33,6 +32,8 @@ if [ "$DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN" != null ]; then
   AFTER=`aws sts get-caller-identity | jq -r .Arn`
 fi
 
+AWS_ACCOUNT=`aws sts get-caller-identity | jq -r .Account`
+
 if [ -s ./state_machine/StateMachineWorkFlow.asl.json ]; then
   sam build \
     --template-file $SAM_FILE_NAME
@@ -40,14 +41,14 @@ if [ -s ./state_machine/StateMachineWorkFlow.asl.json ]; then
   sam package \
     --template-file $SAM_FILE_NAME \
     --s3-bucket $BUCKET_NAME \
-    --s3-prefix $STACK_NAME-p/ \
+    --s3-prefix ${STATE_MACHINE_NAME}_${AWS_ACCOUNT} \
     --output-template-file output.yml
   
   if [ -n "$TAGS_LIST" ]; then
     sam deploy \
       --template-file output.yml \
       --s3-bucket $BUCKET_NAME \
-      --s3-prefix $STACK_NAME-p/ \
+      --s3-prefix ${STATE_MACHINE_NAME}_${AWS_ACCOUNT} \
       --stack-name $STATE_MACHINE_NAME \
       --capabilities CAPABILITY_IAM \
       --no-fail-on-empty-changeset \
@@ -65,7 +66,7 @@ if [ -s ./state_machine/StateMachineWorkFlow.asl.json ]; then
     sam deploy \
       --template-file output.yml \
       --s3-bucket $BUCKET_NAME \
-      --s3-prefix $STACK_NAME-p/ \
+      --s3-prefix ${STATE_MACHINE_NAME}_{$AWS_ACCOUNT} \
       --stack-name $STATE_MACHINE_NAME \
       --capabilities CAPABILITY_IAM \
       --no-fail-on-empty-changeset \
