@@ -96,6 +96,30 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
   samTemplateFileName: "sam-template.yml",
   deploymentDestinationAccounts:
     process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),
+  addPipelineForDevelopBranch: false,
+  appTeamWebhookUrl: appTeamWebhookUrl,
+  appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
+  infraTeamWebhookUrl: infraTeamWebhookUrl,
+  mainBranchApprovalRuleTemplate: roleStack.mainBranchApprovalRuleTemplate,
+  developBranchApprovalRuleTemplate:
+    roleStack.developBranchApprovalRuleTemplate,
+  noticePullRequestEventsFunction:
+    noticeSfnCicdEventsFunctionStack.noticePullRequestEventsFunction,
+  noticeCodeBuildEventsFunction:
+    noticeSfnCicdEventsFunctionStack.noticeCodeBuildEventsFunction,
+  noticeExecuteStateMachineEventsFunction:
+    noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
+});
+
+new CicdStack(app, "StateMachineTest002CicdStack", {
+  stateMachineName: "StateMachineTest002",
+  artifactBucket: artifactBucketStack.artifactBucket,
+  sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
+  gitTemplateFileName: "git-template.zip",
+  samTemplateFileName: "sam-template.yml",
+  deploymentDestinationAccounts:
+    process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),
+  addPipelineForDevelopBranch: true,
   appTeamWebhookUrl: appTeamWebhookUrl,
   appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
   infraTeamWebhookUrl: infraTeamWebhookUrl,

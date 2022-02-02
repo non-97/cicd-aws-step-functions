@@ -1,0 +1,49 @@
+# Example
+#
+# Settings:
+#   deployment_destination_account_iam_role_arn: arn:aws:iam::<AWS Account ID>:role/SamDeployRoleStack-SamDeployRole-xxxx
+#   cron: cron(15 10 * * ? *)
+#   event_pattern: {
+#     "source": ["aws.states"],
+#     "detail-type": ["Step Functions Execution Status Change"],
+#     "detail": {
+#       "status": ["SUCCEEDED"],
+#       "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
+#     }
+#   }
+#   event_bus_arn: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+#   target_event_bus_arn_after_execution: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+#   xray_tracing: false
+#   iam_policy_document: {
+#       "Version": "2012-10-17",
+#       "Statement": [
+#           {
+#               "Sid": "VisualEditor0",
+#               "Effect": "Allow",
+#               "Action": [
+#                   "states:DescribeStateMachine",
+#                   "states:DescribeExecution",
+#                   "states:ListExecutions"
+#               ],
+#               "Resource": [
+#                   "arn:aws:states:us-east-1:<AWS Account ID>:execution:*:*",
+#                   "arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:*"
+#               ]
+#           }
+#       ]
+#   }
+#   tags:
+#     - Key: System Name
+#       Value: System 1
+#     - Key: Environment
+#       Value: production
+  
+Settings:
+  deployment_destination_account_iam_role_arn: 
+  cron: 
+  event_pattern: 
+  event_bus_arn: 
+  target_event_bus_arn_after_execution: 
+  xray_tracing: false
+  iam_policy_document: 
+  tags:

@@ -24,6 +24,7 @@ interface CicdStackProps extends StackProps {
   gitTemplateFileName: string;
   samTemplateFileName: string;
   deploymentDestinationAccounts: string[] | undefined;
+  addPipelineForDevelopBranch: boolean;
   appTeamWebhookUrl: string;
   appTeamManagerWebhookUrl: string;
   infraTeamWebhookUrl: string;
@@ -68,189 +69,202 @@ export class CicdStack extends Stack {
       );
     }
 
+    const createStateMachineStackIamPolicy = new iam.ManagedPolicy(
+      this,
+      "CreateStateMachineStackIamPolicy",
+      {
+        statements: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [
+              `arn:aws:states:${this.region}:${this.account}:stateMachine:*`,
+            ],
+            actions: [
+              "states:CreateStateMachine",
+              "states:DeleteStateMachine",
+              "states:DescribeStateMachine",
+              "states:UpdateStateMachine",
+              "states:TagResource",
+              "states:UntagResource",
+            ],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [`arn:aws:iam::${this.account}:role/*`],
+            actions: [
+              "iam:AttachRolePolicy",
+              "iam:CreateRole",
+              "iam:CreatePolicy",
+              "iam:DeleteRole",
+              "iam:DeleteRolePolicy",
+              "iam:DetachRolePolicy",
+              "iam:GetRole",
+              "iam:GetRolePolicy",
+              "iam:PassRole",
+              "iam:PutRolePolicy",
+              "iam:TagRole",
+              "iam:UntagRole",
+            ],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [`arn:aws:states:${this.region}:${this.account}:key/*`],
+            actions: ["kms:Decrypt", "kms:GenerateDataKey"],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [
+              `arn:aws:logs:${this.region}:${this.account}:log-group:*`,
+            ],
+            actions: [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:DeleteLogGroup",
+              "logs:DescribeLogGroups",
+              "logs:ListTagsLogGroup",
+              "logs:PutRetentionPolicy",
+              "logs:TagLogGroup",
+              "logs:UntagLogGroup",
+            ],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [
+              `arn:aws:cloudformation:${this.region}:${this.account}:stack/*`,
+            ],
+            actions: [
+              "cloudformation:CreateChangeSet",
+              "cloudformation:CreateStack",
+              "cloudformation:DeleteStack",
+              "cloudformation:DescribeChangeSet",
+              "cloudformation:DescribeStackEvents",
+              "cloudformation:DescribeStacks",
+              "cloudformation:ExecuteChangeSet",
+              "cloudformation:GetTemplate",
+              "cloudformation:GetTemplateSummary",
+              "cloudformation:ListStackResources",
+              "cloudformation:UpdateStack",
+            ],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [`arn:aws:events:${this.region}:${this.account}:rule/*`],
+            actions: [
+              "events:DeleteRule",
+              "events:DescribeRule",
+              "events:PutTargets",
+              "events:PutRule",
+              "events:RemoveTargets",
+              "events:TagResource",
+              "events:UntagResource",
+            ],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              "s3:GetObject*",
+              "s3:GetBucket*",
+              "s3:List*",
+              "s3:PutObject",
+            ],
+            resources: [
+              `${props.sfnTemplateBucket.bucketArn}`,
+              `${props.sfnTemplateBucket.bucketArn}/*`,
+            ],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: [
+              "arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31",
+            ],
+            actions: ["cloudformation:CreateChangeSet"],
+          }),
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            resources: ["*"],
+            actions: ["sts:AssumeRole"],
+          }),
+        ],
+      }
+    );
+
     // CloudWatch Logs for CodeBuild Logs
     const codeBuildLogGroup = new logs.LogGroup(this, "CodeBuildLogGroup", {
       logGroupName: `/aws/vendedlogs/codebuild/${props.stateMachineName}-${stackUniqueId}-Logs`,
       retention: logs.RetentionDays.TWO_WEEKS,
     });
 
+    const gitTemplateFilePath =
+      props.addPipelineForDevelopBranch == true
+        ? `git-template/addPipelineForDevelopBranch/${props.gitTemplateFileName}`
+        : props.gitTemplateFileName;
+
     // CodeCommit repository
-    // Upload files stored in an S3 bucket
     const repository = new codecommit.Repository(this, "Repository", {
       repositoryName: props.stateMachineName,
       code: codecommit.Code.fromZipFile(
-        `./src/codeCommit/${props.gitTemplateFileName}`,
+        `./src/codeCommit/${gitTemplateFilePath}`,
         "main"
       ),
     });
     repository.applyRemovalPolicy(RemovalPolicy.RETAIN);
 
-    // CodeBuild　project
-    // Deploy a StateMachine with AWS SAM
-    const project = new codebuild.PipelineProject(this, "Project", {
-      buildSpec: codebuild.BuildSpec.fromObject({
-        version: "0.2",
-        phases: {
-          install: {
-            commands: [
-              "yum install -y jq git",
-              "pip3 install yq",
-              "curl -OL https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip ",
-              "unzip aws-sam-cli-linux-x86_64.zip -d sam-installation",
-              "./sam-installation/install",
-              "sam --version",
-            ],
-          },
-          pre_build: {
-            commands: [
-              `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
-              `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName}`,
-            ],
-          },
-          build: {
-            commands: [
-              `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId}`,
-            ],
-          },
-          post_build: {
-            commands: ["echo Build completed on `date`"],
-          },
+    // main Branch
+    const commandMainBranch =
+      props.addPipelineForDevelopBranch == true ? "prod/" : "";
+
+    const buildSpecMainBranch = codebuild.BuildSpec.fromObject({
+      version: "0.2",
+      phases: {
+        install: {
+          commands: [
+            "yum install -y jq git",
+            "pip3 install yq",
+            "curl -OL https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip ",
+            "unzip aws-sam-cli-linux-x86_64.zip -d sam-installation",
+            "./sam-installation/install",
+            "sam --version",
+          ],
         },
-      }),
-      environment: {
-        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
-      },
-      logging: {
-        cloudWatch: {
-          enabled: true,
-          logGroup: codeBuildLogGroup,
+        pre_build: {
+          commands: [
+            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
+            `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} ${commandMainBranch}`,
+          ],
+        },
+        build: {
+          commands: [
+            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
+            `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId} ${commandMainBranch}`,
+          ],
+        },
+        post_build: {
+          commands: ["echo Build completed on `date`"],
         },
       },
     });
 
+    // CodeBuild project
+    // Deploy a StateMachine with AWS SAM
+    const projectMainBranch = new codebuild.PipelineProject(
+      this,
+      "ProjectMainBranch",
+      {
+        buildSpec: buildSpecMainBranch,
+        environment: {
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
+        },
+        logging: {
+          cloudWatch: {
+            enabled: true,
+            logGroup: codeBuildLogGroup,
+          },
+        },
+      }
+    );
+
     // Add the policies required to deploy StateMachine in AWS SAM
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [
-          `arn:aws:states:${this.region}:${this.account}:stateMachine:*`,
-        ],
-        actions: [
-          "states:CreateStateMachine",
-          "states:DeleteStateMachine",
-          "states:DescribeStateMachine",
-          "states:UpdateStateMachine",
-          "states:TagResource",
-          "states:UntagResource",
-        ],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [`arn:aws:iam::${this.account}:role/*`],
-        actions: [
-          "iam:AttachRolePolicy",
-          "iam:CreateRole",
-          "iam:CreatePolicy",
-          "iam:DeleteRole",
-          "iam:DeleteRolePolicy",
-          "iam:DetachRolePolicy",
-          "iam:GetRole",
-          "iam:GetRolePolicy",
-          "iam:PassRole",
-          "iam:PutRolePolicy",
-          "iam:TagRole",
-          "iam:UntagRole",
-        ],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [`arn:aws:states:${this.region}:${this.account}:key/*`],
-        actions: ["kms:Decrypt", "kms:GenerateDataKey"],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [`arn:aws:logs:${this.region}:${this.account}:log-group:*`],
-        actions: [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:DeleteLogGroup",
-          "logs:DescribeLogGroups",
-          "logs:ListTagsLogGroup",
-          "logs:PutRetentionPolicy",
-          "logs:TagLogGroup",
-          "logs:UntagLogGroup",
-        ],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [
-          `arn:aws:cloudformation:${this.region}:${this.account}:stack/*`,
-        ],
-        actions: [
-          "cloudformation:CreateChangeSet",
-          "cloudformation:CreateStack",
-          "cloudformation:DeleteStack",
-          "cloudformation:DescribeChangeSet",
-          "cloudformation:DescribeStackEvents",
-          "cloudformation:DescribeStacks",
-          "cloudformation:ExecuteChangeSet",
-          "cloudformation:GetTemplate",
-          "cloudformation:GetTemplateSummary",
-          "cloudformation:ListStackResources",
-          "cloudformation:UpdateStack",
-        ],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [`arn:aws:events:${this.region}:${this.account}:rule/*`],
-        actions: [
-          "events:DeleteRule",
-          "events:DescribeRule",
-          "events:PutTargets",
-          "events:PutRule",
-          "events:RemoveTargets",
-          "events:TagResource",
-          "events:UntagResource",
-        ],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["s3:GetObject*", "s3:GetBucket*", "s3:List*", "s3:PutObject"],
-        resources: [
-          `${props.sfnTemplateBucket.bucketArn}`,
-          `${props.sfnTemplateBucket.bucketArn}/*`,
-        ],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [
-          "arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31",
-        ],
-        actions: ["cloudformation:CreateChangeSet"],
-      })
-    );
-    project.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: ["*"],
-        actions: ["sts:AssumeRole"],
-      })
-    );
+    projectMainBranch.role?.addManagedPolicy(createStateMachineStackIamPolicy);
 
     // CodePipeline Artifacts
     const sourceOutput = new codepipeline.Artifact();
@@ -268,7 +282,7 @@ export class CicdStack extends Stack {
     // Deploy a StateMachine with AWS SAM
     const buildActionMainBranch = new codepipeline_actions.CodeBuildAction({
       actionName: "CodeBuild",
-      project: project,
+      project: projectMainBranch,
       input: sourceOutput,
       outputs: [buildOutput],
     });
@@ -287,6 +301,98 @@ export class CicdStack extends Stack {
       ],
       artifactBucket: props.artifactBucket,
     });
+
+    if (props.addPipelineForDevelopBranch == true) {
+      // develop branch
+      const buildSpecDevelopBranch = codebuild.BuildSpec.fromObject({
+        version: "0.2",
+        phases: {
+          install: {
+            commands: [
+              "yum install -y jq git",
+              "pip3 install yq",
+              "curl -OL https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip ",
+              "unzip aws-sam-cli-linux-x86_64.zip -d sam-installation",
+              "./sam-installation/install",
+              "sam --version",
+            ],
+          },
+          pre_build: {
+            commands: [
+              `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
+              `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} stg/`,
+            ],
+          },
+          build: {
+            commands: [
+              `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
+              `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId}`,
+            ],
+          },
+          post_build: {
+            commands: ["echo Build completed on `date`"],
+          },
+        },
+      });
+
+      // CodeBuild project
+      // Deploy a StateMachine with AWS SAM
+      const projectDevelopBranch = new codebuild.PipelineProject(
+        this,
+        "ProjectDevelopBranch",
+        {
+          buildSpec: buildSpecDevelopBranch,
+          environment: {
+            buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
+          },
+          logging: {
+            cloudWatch: {
+              enabled: true,
+              logGroup: codeBuildLogGroup,
+            },
+          },
+        }
+      );
+
+      // Add the policies required to deploy StateMachine in AWS SAM
+      projectDevelopBranch.role?.addManagedPolicy(
+        createStateMachineStackIamPolicy
+      );
+
+      // If there are any changes to the main branch
+      const sourceActionDevelopBranch =
+        new codepipeline_actions.CodeCommitSourceAction({
+          actionName: "CodeCommit",
+          repository: repository,
+          branch: "develop",
+          output: sourceOutput,
+        });
+
+      // Deploy a StateMachine with AWS SAM
+      const buildActionDevelopBranch = new codepipeline_actions.CodeBuildAction(
+        {
+          actionName: "CodeBuild",
+          project: projectDevelopBranch,
+          input: sourceOutput,
+          outputs: [buildOutput],
+        }
+      );
+
+      // CodePipeline
+      new codepipeline.Pipeline(this, "PipelineDevelopBranch", {
+        stages: [
+          {
+            stageName: "Source",
+            actions: [sourceActionDevelopBranch],
+          },
+          {
+            stageName: "Build",
+            actions: [buildActionDevelopBranch],
+          },
+        ],
+        artifactBucket: props.artifactBucket,
+      });
+    }
 
     // IAM policy for associating repositories with approval rule templates
     const approvalRuleTemplatePolicy =
@@ -421,7 +527,7 @@ export class CicdStack extends Stack {
         source: ["aws.codebuild"],
         detailType: ["CodeBuild Build State Change"],
         detail: {
-          "project-name": [project.projectName],
+          "project-name": [projectMainBranch.projectName],
         },
       },
       targets: [
