@@ -23,6 +23,7 @@ interface CicdStackProps extends StackProps {
   sfnTemplateBucket: s3.IBucket;
   gitTemplateFileName: string;
   samTemplateFileName: string;
+  deploymentDestinationAccounts: string[] | undefined;
   appTeamWebhookUrl: string;
   appTeamManagerWebhookUrl: string;
   infraTeamWebhookUrl: string;
@@ -39,6 +40,33 @@ export class CicdStack extends Stack {
 
     // Get the string after the stack name in the stack id to append to the end of the Log Group name to make it unique
     const stackUniqueId = Fn.select(2, Fn.split("/", this.stackId));
+
+    // Allow S3 bucket operations from the AWS account of the deployment destination
+    if (typeof props?.deploymentDestinationAccounts != "undefined") {
+      props.deploymentDestinationAccounts.forEach(
+        (deploymentDestinationAccount) => {
+          props.artifactBucket.addToResourcePolicy(
+            new iam.PolicyStatement({
+              actions: [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:Abort*",
+              ],
+              resources: [
+                `${props.artifactBucket.bucketArn}`,
+                `${props.artifactBucket.bucketArn}/${props.stateMachineName}_${deploymentDestinationAccount}/*`,
+              ],
+              principals: [
+                new iam.AccountPrincipal(deploymentDestinationAccount),
+              ],
+            })
+          );
+        }
+      );
+    }
 
     // CloudWatch Logs for CodeBuild Logs
     const codeBuildLogGroup = new logs.LogGroup(this, "CodeBuildLogGroup", {

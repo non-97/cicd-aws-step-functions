@@ -43,13 +43,7 @@ const sfnTemplateBucketStack = new SfnTemplateBucketStack(
 );
 
 // Stack of S3 buckets for CodeBuild artifacts
-const artifactBucketStack = new ArtifactBucketStack(
-  app,
-  "ArtifactBucketStack",
-  {
-    deploymentDestinationAccount: process.env.DEPLOYMENT_DESTINATION_ACCOUNT,
-  }
-);
+const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
 
 // Stack of IAM roles and CodeCommit approval rule templates for each role
 const roleStack = new RoleStack(app, "RoleStack", {
@@ -100,6 +94,8 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
   sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
   gitTemplateFileName: "git-template.zip",
   samTemplateFileName: "sam-template.yml",
+  deploymentDestinationAccounts:
+    process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),
   appTeamWebhookUrl: appTeamWebhookUrl,
   appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
   infraTeamWebhookUrl: infraTeamWebhookUrl,
