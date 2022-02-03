@@ -392,6 +392,28 @@ export class CicdStack extends Stack {
         ],
         artifactBucket: props.artifactBucket,
       });
+
+      // EventBridge Rule for notification of CodeBuild status changes
+      new events.Rule(this, "DevelopBranchBuildStatusEventBridgeRule", {
+        eventPattern: {
+          source: ["aws.codebuild"],
+          detailType: ["CodeBuild Build State Change"],
+          detail: {
+            "project-name": [projectDevelopBranch.projectName],
+          },
+        },
+        targets: [
+          new targets.LambdaFunction(props.noticeCodeBuildEventsFunction, {
+            event: events.RuleTargetInput.fromObject({
+              originalEvent: events.EventField.fromPath("$"),
+              slackWebhookUrls: [
+                props.appTeamWebhookUrl,
+                props.appTeamManagerWebhookUrl,
+              ],
+            }),
+          }),
+        ],
+      });
     }
 
     // IAM policy for associating repositories with approval rule templates
@@ -522,7 +544,7 @@ export class CicdStack extends Stack {
     });
 
     // EventBridge Rule for notification of CodeBuild status changes
-    new events.Rule(this, "BuildStatusEventBridgeRule", {
+    new events.Rule(this, "MainBranchBuildStatusEventBridgeRule", {
       eventPattern: {
         source: ["aws.codebuild"],
         detailType: ["CodeBuild Build State Change"],
