@@ -11,6 +11,7 @@
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.4.34",
     "@types/jest": "26.0.10",
     "@types/node": "10.17.27",
     "aws-cdk": "^2.10.0",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-codecommit": "3.47.0",
     "@aws-sdk/client-sfn": "3.47.0",
+    "adm-zip": "^0.5.9",
     "aws-cdk-lib": "^2.10.0",
     "axios": "0.25.0",
     "constructs": "10.0.0",

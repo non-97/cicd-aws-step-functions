@@ -92,7 +92,7 @@ new CicdStack(app, "StateMachineTest001CicdStack", {
   stateMachineName: "StateMachineTest001",
   artifactBucket: artifactBucketStack.artifactBucket,
   sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
-  gitTemplateFileName: "git-template.zip",
+  gitTemplateDirectoryPath: "./src/codeCommit/git-template",
   samTemplateFileName: "sam-template.yml",
   deploymentDestinationAccounts:
     process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),
@@ -115,7 +115,7 @@ new CicdStack(app, "StateMachineTest002CicdStack", {
   stateMachineName: "StateMachineTest002",
   artifactBucket: artifactBucketStack.artifactBucket,
   sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
-  gitTemplateFileName: "git-template.zip",
+  gitTemplateDirectoryPath: "./src/codeCommit/git-template",
   samTemplateFileName: "sam-template.yml",
   deploymentDestinationAccounts:
     process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),

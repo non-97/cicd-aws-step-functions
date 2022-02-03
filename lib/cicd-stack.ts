@@ -17,11 +17,14 @@ import {
   RemovalPolicy,
 } from "aws-cdk-lib";
 
+import * as fs from "fs";
+import * as adm_zip from "adm-zip";
+
 interface CicdStackProps extends StackProps {
   stateMachineName: string;
   artifactBucket: s3.IBucket;
   sfnTemplateBucket: s3.IBucket;
-  gitTemplateFileName: string;
+  gitTemplateDirectoryPath: string;
   samTemplateFileName: string;
   deploymentDestinationAccounts: string[] | undefined;
   addPipelineForDevelopBranch: boolean;
@@ -41,6 +44,32 @@ export class CicdStack extends Stack {
 
     // Get the string after the stack name in the stack id to append to the end of the Log Group name to make it unique
     const stackUniqueId = Fn.select(2, Fn.split("/", this.stackId));
+
+    // Create a zip file for repository initialization
+    const zip = new adm_zip();
+    const fileNames = fs
+      .readdirSync(props.gitTemplateDirectoryPath, { withFileTypes: true })
+      .filter((dirent) => dirent.isFile())
+      .map(({ name }) => name)
+      .filter((fileName) => {
+        return fileName != ".DS_Store";
+      });
+
+    for (const fileName of fileNames) {
+      if (props.addPipelineForDevelopBranch === true) {
+        for (const directory of ["prod", "stg"]) {
+          zip.addLocalFile(
+            `${props.gitTemplateDirectoryPath}/${fileName}`,
+            directory
+          );
+        }
+      } else {
+        zip.addLocalFile(`${props.gitTemplateDirectoryPath}/${fileName}`);
+      }
+    }
+    zip.writeZip(
+      `${props.gitTemplateDirectoryPath}_${props.stateMachineName}.zip`
+    );
 
     // Allow S3 bucket operations from the AWS account of the deployment destination
     if (typeof props?.deploymentDestinationAccounts != "undefined") {
@@ -194,23 +223,18 @@ export class CicdStack extends Stack {
       retention: logs.RetentionDays.TWO_WEEKS,
     });
 
-    const gitTemplateFilePath =
-      props.addPipelineForDevelopBranch == true
-        ? `git-template/addPipelineForDevelopBranch/${props.gitTemplateFileName}`
-        : props.gitTemplateFileName;
-
     // CodeCommit repository
     const repository = new codecommit.Repository(this, "Repository", {
       repositoryName: props.stateMachineName,
       code: codecommit.Code.fromZipFile(
-        `./src/codeCommit/${gitTemplateFilePath}`,
+        `${props.gitTemplateDirectoryPath}_${props.stateMachineName}.zip`,
         "main"
       ),
     });
     repository.applyRemovalPolicy(RemovalPolicy.RETAIN);
 
     // main Branch
-    const commandMainBranch =
+    const mainBranchRepositoryDirectory =
       props.addPipelineForDevelopBranch == true ? "prod/" : "";
 
     const buildSpecMainBranch = codebuild.BuildSpec.fromObject({
@@ -229,13 +253,13 @@ export class CicdStack extends Stack {
         pre_build: {
           commands: [
             `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
-            `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} ${commandMainBranch}`,
+            `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} ${mainBranchRepositoryDirectory}`,
           ],
         },
         build: {
           commands: [
             `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-            `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId} ${commandMainBranch}`,
+            `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId} ${mainBranchRepositoryDirectory}`,
           ],
         },
         post_build: {
