@@ -83,7 +83,6 @@ export class CicdStack extends Stack {
                 "s3:List*",
                 "s3:DeleteObject*",
                 "s3:PutObject",
-                "s3:Abort*",
               ],
               resources: [
                 `${props.artifactBucket.bucketArn}`,
@@ -119,7 +118,10 @@ export class CicdStack extends Stack {
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [`arn:aws:iam::${this.account}:role/*`],
+            resources: [
+              `arn:aws:iam::${this.account}:role/*`,
+              `arn:aws:iam::${this.account}:policy/*`,
+            ],
             actions: [
               "iam:AttachRolePolicy",
               "iam:CreateRole",
@@ -137,14 +139,12 @@ export class CicdStack extends Stack {
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [`arn:aws:states:${this.region}:${this.account}:key/*`],
+            resources: [`arn:aws:kms:${this.region}:${this.account}:key/*`],
             actions: ["kms:Decrypt", "kms:GenerateDataKey"],
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [
-              `arn:aws:logs:${this.region}:${this.account}:log-group:*`,
-            ],
+            resources: [`arn:aws:logs:*:${this.account}:log-group:*`],
             actions: [
               "logs:CreateLogGroup",
               "logs:CreateLogStream",
@@ -190,12 +190,7 @@ export class CicdStack extends Stack {
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            actions: [
-              "s3:GetObject*",
-              "s3:GetBucket*",
-              "s3:List*",
-              "s3:PutObject",
-            ],
+            actions: ["s3:GetObject*", "s3:GetBucket*", "s3:List*"],
             resources: [
               `${props.sfnTemplateBucket.bucketArn}`,
               `${props.sfnTemplateBucket.bucketArn}/*`,
@@ -204,7 +199,7 @@ export class CicdStack extends Stack {
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             resources: [
-              "arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31",
+              `arn:aws:cloudformation:${this.region}:aws:transform/Serverless-2016-10-31`,
             ],
             actions: ["cloudformation:CreateChangeSet"],
           }),
