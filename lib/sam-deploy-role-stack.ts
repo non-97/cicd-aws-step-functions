@@ -16,9 +16,7 @@ export class SamDeployRoleStack extends Stack {
         statements: [
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [
-              `arn:aws:states:${this.region}:${this.account}:stateMachine:*`,
-            ],
+            resources: [`arn:aws:states:*:${this.account}:stateMachine:*`],
             actions: [
               "states:CreateStateMachine",
               "states:DeleteStateMachine",
@@ -51,7 +49,7 @@ export class SamDeployRoleStack extends Stack {
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [`arn:aws:kms:${this.region}:${this.account}:key/*`],
+            resources: [`arn:aws:kms:*:${this.account}:key/*`],
             actions: ["kms:Decrypt", "kms:GenerateDataKey"],
           }),
           new iam.PolicyStatement({
@@ -70,9 +68,7 @@ export class SamDeployRoleStack extends Stack {
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [
-              `arn:aws:cloudformation:${this.region}:${this.account}:stack/*`,
-            ],
+            resources: [`arn:aws:cloudformation:*:${this.account}:stack/*`],
             actions: [
               "cloudformation:CreateChangeSet",
               "cloudformation:CreateStack",
@@ -89,7 +85,7 @@ export class SamDeployRoleStack extends Stack {
           }),
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
-            resources: [`arn:aws:events:${this.region}:${this.account}:rule/*`],
+            resources: [`arn:aws:events:*:${this.account}:rule/*`],
             actions: [
               "events:DeleteRule",
               "events:DescribeRule",
@@ -114,7 +110,7 @@ export class SamDeployRoleStack extends Stack {
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             resources: [
-              `arn:aws:cloudformation:${this.region}:aws:transform/Serverless-2016-10-31`,
+              `arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31`,
             ],
             actions: ["cloudformation:CreateChangeSet"],
           }),
