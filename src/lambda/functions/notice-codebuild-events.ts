@@ -1,5 +1,3 @@
-import { EventType } from "aws-cdk-lib/aws-s3";
-import { Result } from "aws-cdk-lib/aws-stepfunctions";
 import * as util from "util";
 
 import { OriginalEventBase } from "./event-bridge";
