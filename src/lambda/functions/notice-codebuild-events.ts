@@ -1,3 +1,5 @@
+import { EventType } from "aws-cdk-lib/aws-s3";
+import { Result } from "aws-cdk-lib/aws-stepfunctions";
 import * as util from "util";
 
 import { OriginalEventBase } from "./event-bridge";
@@ -54,56 +56,58 @@ interface HandlerParameters {
   slackWebhookUrls: string[];
 }
 
-export const handler = async (
-  event: HandlerParameters
-): Promise<string | Error> => {
+const getParametersFromEnvVar = (name: string, example: string): string => {
+  const target = process.env[name];
+
   // If the required environment variables do not exist, the process is exited
-  if (!process.env["REGION"]) {
+  if (target === undefined) {
     throw new Error(
-      `The region name environment variable (REGION) is not specified. e.g. us-east-1`
+      `The region name environment variable (${name}) is not specified. e.g. ${example}`
     );
   }
-  if (!process.env["ACCOUNT"]) {
-    throw new Error(
-      `The AWS Account ID environment variable (ACCOUNT) is not specified. e.g. 123456789012`
-    );
-  }
+  return target;
+};
 
-  console.log(`event : ${JSON.stringify(event, null, 2)}`);
-
-  const region: string = process.env["REGION"];
-  const account: string = process.env["ACCOUNT"];
-
-  // Define Slack message templates
-  const slackMessage: SlackMessage = {
-    blocks: [
-      {
-        type: "header",
-        block_id: "header",
-        text: {
-          type: "plain_text",
-          text: "",
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "section",
-        block_id: "fieldsSection",
-        fields: new Array(),
-      },
-    ],
+interface Header {
+  type: "header";
+  block_id: "header";
+  text: {
+    type: "plain_text";
+    text: string;
   };
+}
 
-  // Index of each block
-  const headerIndex = slackMessage.blocks.findIndex(
-    (block) => block.block_id === "header"
-  );
-  const fieldsSectionIndex = slackMessage.blocks.findIndex(
-    (block) => block.block_id === "fieldsSection"
-  );
+const buildHeader = (event: HandlerParameters): Header => {
+  const buildStatus = event.originalEvent.detail["build-status"];
 
+  return {
+    type: "header",
+    block_id: "header",
+    text: {
+      type: "plain_text",
+      text: `CodeBuild Build State has changed to ${buildStatus}`,
+    },
+  };
+};
+
+interface SectionField {
+  type: string;
+  text: string;
+}
+interface Section {
+  type: "section";
+  block_id: string;
+  fields: SectionField[];
+}
+
+interface Context {
+  region: string;
+  account: string;
+}
+const buildFieldsSection = (
+  event: HandlerParameters,
+  context: Context
+): Section => {
   // Name of the CodeBuild project
   const projectName = event.originalEvent.detail["project-name"];
 
@@ -113,33 +117,58 @@ export const handler = async (
   // Build status of CodeBuild
   const buildStatus = event.originalEvent.detail["build-status"];
 
+  const projectNameInBuildId = buildId.substring(buildId.indexOf(projectName));
   // AWS Management Console URL
-  const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${account}/projects/${projectName}/build/${buildId.substring(
-    buildId.indexOf(projectName)
-  )}?region=${region}`;
+  const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${context.account}/projects/${projectName}/build/${projectNameInBuildId}?region=${context.region}`;
 
-  // Construct a Slack message
-  slackMessage.blocks[
-    headerIndex
-  ].text!.text = `CodeBuild Build State has changed to ${buildStatus}`;
+  const fields = [
+    {
+      type: "mrkdwn",
+      text: `*AWS Management Console URL:*\n${consoleUrl}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Project Name:*\n${projectName}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Build ARN:*\n${buildId}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Build Status:*\n${buildStatus}`,
+    },
+  ];
 
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*AWS Management Console URL:*\n${consoleUrl}`,
-  });
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Project Name:*\n${projectName}`,
-  });
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Build ARN:*\n${buildId}`,
-  });
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Build Status:*\n${buildStatus}`,
-  });
+  return {
+    type: "section",
+    block_id: "fieldsSection",
+    fields,
+  };
+};
 
+export const handler = async (
+  event: HandlerParameters
+): Promise<void | Error> => {
+  console.log(`event : ${JSON.stringify(event, null, 2)}`);
+
+  const context = {
+    region: getParametersFromEnvVar("REGION", "us-east-1"),
+    account: getParametersFromEnvVar("ACCOUNT", "123456789012"),
+  };
+
+  // Define Slack message
+  const header = buildHeader(event);
+  const fields = buildFieldsSection(event, context);
+  const slackMessage: SlackMessage = {
+    blocks: [
+      header,
+      {
+        type: "divider",
+      },
+      fields,
+    ],
+  };
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
 
   // Send a message to the specified Slack webhook URL
@@ -148,5 +177,7 @@ export const handler = async (
       postSlackMessage(slackWebhookUrl, slackMessage)
     )
   );
-  return util.inspect(responses);
+  console.log(`responses : ${util.inspect(responses)}`);
+
+  return;
 };
