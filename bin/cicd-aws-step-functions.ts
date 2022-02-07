@@ -18,12 +18,12 @@ const app = new cdk.App();
 
 // If the variable specified by dotenv is not defined, the process is aborted
 if (
-  typeof process.env.APP_TEAM_WEBHOOK_URL == "undefined" ||
-  typeof process.env.APP_TEAM_MANAGER_WEBHOOK_URL == "undefined" ||
-  typeof process.env.INFRA_TEAM_WEBHOOK_URL == "undefined" ||
-  typeof process.env.APP_TEAM_IAM_USER_ARN == "undefined" ||
-  typeof process.env.APP_TEAM_MANAGER_IAM_USER_ARN == "undefined" ||
-  typeof process.env.INFRA_TEAM_IAM_USER_ARN == "undefined"
+  process.env.APP_TEAM_WEBHOOK_URL === undefined ||
+  process.env.APP_TEAM_MANAGER_WEBHOOK_URL === undefined ||
+  process.env.INFRA_TEAM_WEBHOOK_URL === undefined ||
+  process.env.APP_TEAM_IAM_USER_ARN === undefined ||
+  process.env.APP_TEAM_MANAGER_IAM_USER_ARN === undefined ||
+  process.env.INFRA_TEAM_IAM_USER_ARN === undefined
 ) {
   console.error(`
     There is not enough input in the .env file.
@@ -61,7 +61,7 @@ const roleStack = new RoleStack(app, "RoleStack", {
   ).split(","),
 });
 
-if (typeof process.env.DEPLOYMENT_CONTROL_ACCOUNT != "undefined") {
+if (process.env.DEPLOYMENT_CONTROL_ACCOUNT !== undefined) {
   const samDeployRoleStack = new SamDeployRoleStack(app, "SamDeployRoleStack", {
     deploymentControlAccount: process.env.DEPLOYMENT_CONTROL_ACCOUNT,
   });

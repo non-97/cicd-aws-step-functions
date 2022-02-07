@@ -1,14 +1,33 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 
-interface SlackMessageBlock {
-  type: string;
+export interface Header {
+  type: "header";
   block_id?: string;
-  text?: { type: string; text: string };
-  fields?: { type: string; text: string }[];
+  text: {
+    type: "plain_text";
+    text: string;
+  };
+}
+
+export interface Section {
+  type: "section";
+  block_id?: string;
+  fields?: SectionField[];
+  text?: SectionField;
+}
+
+interface SectionField {
+  type: string;
+  text: string;
+}
+
+interface Divider {
+  type: "divider";
+  block_id?: string;
 }
 
 export interface SlackMessage {
-  blocks: SlackMessageBlock[];
+  blocks: (Header | Section | Divider)[];
 }
 
 export const postSlackMessage = async (
@@ -26,7 +45,7 @@ export const postSlackMessage = async (
   };
 
   return new Promise<AxiosResponse | AxiosError>((resolve, reject) => {
-    // Request Slack
+    // POST to Slack Webhook URL
     axios(options)
       .then((response) => {
         console.log(

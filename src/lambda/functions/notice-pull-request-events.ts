@@ -3,10 +3,9 @@ import {
   GetPullRequestCommand,
   GetCommentsForPullRequestCommand,
 } from "@aws-sdk/client-codecommit";
-import * as util from "util";
 
 import { OriginalEventBase } from "./event-bridge";
-import { SlackMessage, postSlackMessage } from "./slack";
+import { Header, Section, SlackMessage, postSlackMessage } from "./slack";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codecommit/latest/userguide/monitoring-events.html#pullRequestCreated
 // - commentOnPullRequestCreated Event
@@ -139,73 +138,23 @@ interface HandlerParameters {
   noticeTargets: { [key: string]: string[] }[];
 }
 
-// Number of characters limit for slack
-// Ref: https://api.slack.com/reference/block-kit/blocks#section_fields
-const characterLimit = 2000;
+interface Context {
+  region: string;
+}
 
-export const handler = async (
-  event: HandlerParameters
-): Promise<string | null | Error> => {
+const getParametersFromEnvVar = (name: string, example: string): string => {
+  const target = process.env[name];
+
   // If the required environment variables do not exist, the process is exited
-  if (!process.env["REGION"]) {
+  if (target === undefined) {
     throw new Error(
-      `The region name environment variable (REGION) is not specified. e.g. us-east-1`
+      `The environment variable "${name}" is not specified. e.g. ${example}`
     );
   }
+  return target;
+};
 
-  console.log(`event : ${JSON.stringify(event, null, 2)}`);
-
-  const region: string = process.env["REGION"];
-
-  const codeCommitClient = new CodeCommitClient({ region: region });
-
-  const getPullRequestCommandOutput = await codeCommitClient.send(
-    new GetPullRequestCommand({
-      pullRequestId: event.originalEvent.detail.pullRequestId,
-    })
-  );
-
-  // Define Slack message templates
-  const slackMessage: SlackMessage = {
-    blocks: [
-      {
-        type: "header",
-        block_id: "header",
-        text: {
-          type: "plain_text",
-          text: "",
-        },
-      },
-      {
-        type: "divider",
-      },
-      {
-        type: "section",
-        block_id: "fieldsSection",
-        fields: new Array(),
-      },
-      {
-        type: "section",
-        block_id: "textSection",
-        text: {
-          type: "mrkdwn",
-          text: "",
-        },
-      },
-    ],
-  };
-
-  // Index of each block
-  const headerIndex = slackMessage.blocks.findIndex(
-    (block) => block.block_id === "header"
-  );
-  const fieldsSectionIndex = slackMessage.blocks.findIndex(
-    (block) => block.block_id === "fieldsSection"
-  );
-  const textSectionIndex = slackMessage.blocks.findIndex(
-    (block) => block.block_id === "textSection"
-  );
-
+const getTitleMessageByEvent = (event: HandlerParameters): string => {
   // The name of the repository where the event occurred
   const repositoryName =
     "repositoryNames" in event.originalEvent.detail
@@ -213,6 +162,56 @@ export const handler = async (
       : event.originalEvent.detail.repositoryName
       ? event.originalEvent.detail.repositoryName
       : "undefined";
+
+  switch (event.originalEvent.detail.event) {
+    case "commentOnPullRequestCreated":
+      return `The pull request in the ${repositoryName} repository has been commented`;
+
+    case "commentOnPullRequestUpdated":
+      return `The ${repositoryName} repository pull request comments has been updated`;
+
+    case "pullRequestCreated":
+      return `The pull request has been created in the ${repositoryName} repository`;
+
+    case "pullRequestSourceBranchUpdated":
+      return `The source branch of the pull request in the ${repositoryName} repository has been updated`;
+
+    case "pullRequestStatusChanged":
+      return `The status of the ${repositoryName} repository pull request has changed`;
+
+    case "pullRequestMergeStatusUpdated":
+      return `The merge status of the ${repositoryName} repository pull request has changed`;
+
+    case "pullRequestApprovalStateChanged":
+      return `The approval status of the ${repositoryName} repository pull request has changed`;
+
+    default:
+      return "";
+  }
+};
+
+const buildHeaderSection = (event: HandlerParameters): Header => {
+  return {
+    type: "header",
+    block_id: "header",
+    text: {
+      type: "plain_text",
+      text: getTitleMessageByEvent(event),
+    },
+  };
+};
+
+const buildFieldsSection = async (
+  event: HandlerParameters,
+  context: Context
+): Promise<Section> => {
+  const codeCommitClient = new CodeCommitClient({ region: context.region });
+
+  const getPullRequestCommandOutput = await codeCommitClient.send(
+    new GetPullRequestCommand({
+      pullRequestId: event.originalEvent.detail.pullRequestId,
+    })
+  );
 
   // Event notification body
   const notificationBody = event.originalEvent.detail.notificationBody;
@@ -243,62 +242,49 @@ export const handler = async (
     notificationBody.indexOf("https://")
   );
 
-  // Construct a Slack message
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*AWS Management Console URL:*\n${consoleUrl}`,
-  });
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Caller User ARN:*\n${callerUserArn}`,
-  });
-
-  slackMessage.blocks[
-    textSectionIndex
-  ].text!.text = `\`\`\`${notificationBody.substring(
-    0,
-    characterLimit - 1
-  )}\`\`\``;
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Pull Request ID:*\n${getPullRequestCommandOutput.pullRequest?.pullRequestId}`,
-  });
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Pull Request Title:*\n${getPullRequestCommandOutput.pullRequest?.title?.substring(
-      0,
-      characterLimit - 1
-    )}`,
-  });
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Pull Request Status:*\n${getPullRequestCommandOutput.pullRequest?.pullRequestStatus}`,
-  });
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*isMerged Status:*\n${isMerged}`,
-  });
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Destination Reference:*\n${destinationReference?.substring(
-      0,
-      characterLimit - 1
-    )}`,
-  });
-
-  slackMessage.blocks[fieldsSectionIndex].fields?.push({
-    type: "mrkdwn",
-    text: `*Source Reference:*\n${sourceReference?.substring(
-      0,
-      characterLimit - 1
-    )}`,
-  });
+  const fields = [
+    {
+      type: "mrkdwn",
+      text: `*AWS Management Console URL:*\n${consoleUrl}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Caller User ARN:*\n${callerUserArn}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Pull Request ID:*\n${getPullRequestCommandOutput.pullRequest?.pullRequestId}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Pull Request Title:*\n${getPullRequestCommandOutput.pullRequest?.title?.substring(
+        0,
+        characterLimit - 1
+      )}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Pull Request Status:*\n${getPullRequestCommandOutput.pullRequest?.pullRequestStatus}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*isMerged Status:*\n${isMerged}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Destination Reference:*\n${destinationReference?.substring(
+        0,
+        characterLimit - 1
+      )}`,
+    },
+    {
+      type: "mrkdwn",
+      text: `*Source Reference:*\n${sourceReference?.substring(
+        0,
+        characterLimit - 1
+      )}`,
+    },
+  ];
 
   // If the event is about comments
   if ("commentId" in event.originalEvent.detail) {
@@ -309,7 +295,7 @@ export const handler = async (
     );
 
     // Get the name of the file commented on
-    slackMessage.blocks[fieldsSectionIndex].fields?.push({
+    fields.push({
       type: "mrkdwn",
       text: `*File Name:*\n${getCommentsForPullRequestCommandOutput.commentsForPullRequestData
         ?.find((pullRequest) =>
@@ -323,7 +309,7 @@ export const handler = async (
     });
 
     // Get comment
-    slackMessage.blocks[fieldsSectionIndex].fields?.push({
+    fields.push({
       type: "mrkdwn",
       text: `*Comment:*\n${getCommentsForPullRequestCommandOutput.commentsForPullRequestData
         ?.find((pullRequest) =>
@@ -344,51 +330,74 @@ export const handler = async (
 
   // Approval status of the Pull Request
   if ("approvalStatus" in event.originalEvent.detail) {
-    slackMessage.blocks[fieldsSectionIndex].fields?.push({
+    fields.push({
       type: "mrkdwn",
       text: `*Approval Status:*\n${event.originalEvent.detail.approvalStatus}`,
     });
   }
 
-  // Set the title by event type
-  switch (event.originalEvent.detail.event) {
-    case "commentOnPullRequestCreated":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The pull request in the ${repositoryName} repository has been commented`;
-      break;
-    case "commentOnPullRequestUpdated":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The ${repositoryName} repository pull request comments has been updated`;
-      break;
-    case "pullRequestCreated":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The pull request has been created in the ${repositoryName} repository`;
-      break;
-    case "pullRequestSourceBranchUpdated":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The source branch of the pull request in the ${repositoryName} repository has been updated`;
-      break;
-    case "pullRequestStatusChanged":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The status of the ${repositoryName} repository pull request has changed`;
-      break;
-    case "pullRequestMergeStatusUpdated":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The merge status of the ${repositoryName} repository pull request has changed`;
-      break;
-    case "pullRequestApprovalStateChanged":
-      slackMessage.blocks[
-        headerIndex
-      ].text!.text = `The approval status of the ${repositoryName} repository pull request has changed`;
-      break;
-  }
+  return {
+    type: "section",
+    block_id: "fieldsSection",
+    fields,
+  };
+};
 
+const buildTextSection = (event: HandlerParameters): Section => {
+  // Event notification body
+  const notificationBody = event.originalEvent.detail.notificationBody;
+
+  return {
+    type: "section",
+    block_id: "textSection",
+    text: {
+      type: "mrkdwn",
+      text: `\`\`\`${notificationBody.substring(0, characterLimit - 1)}\`\`\``,
+    },
+  };
+};
+
+// Number of characters limit for slack
+// Ref: https://api.slack.com/reference/block-kit/blocks#section_fields
+const characterLimit = 2000;
+
+export const handler = async (
+  event: HandlerParameters
+): Promise<void | Error> => {
+  console.log(`event : ${JSON.stringify(event, null, 2)}`);
+
+  const context = {
+    region: getParametersFromEnvVar("REGION", "us-east-1"),
+  };
+
+  const codeCommitClient = new CodeCommitClient({ region: context.region });
+
+  const getPullRequestCommandOutput = await codeCommitClient.send(
+    new GetPullRequestCommand({
+      pullRequestId: event.originalEvent.detail.pullRequestId,
+    })
+  );
+
+  // Target branch for PullRequest
+  const destinationReference =
+    getPullRequestCommandOutput.pullRequest?.pullRequestTargets?.find(
+      (pullRequestTarget) => pullRequestTarget.destinationReference
+    )?.destinationReference;
+
+  // Define Slack message
+  const header = buildHeaderSection(event);
+  const fields = await buildFieldsSection(event, context);
+  const text = buildTextSection(event);
+  const slackMessage: SlackMessage = {
+    blocks: [
+      header,
+      {
+        type: "divider",
+      },
+      fields,
+      text,
+    ],
+  };
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
 
   // Send a message to the specified Slack webhook URL from the information of the target branch of the pull request
@@ -397,12 +406,11 @@ export const handler = async (
       (noticeTarget) => destinationReference! in noticeTarget
     )!
   )) {
-    const responses = await Promise.all(
+    await Promise.all(
       slackWebhookUrls.map((slackWebhookUrl) =>
         postSlackMessage(slackWebhookUrl, slackMessage)
       )
     );
-    return util.inspect(responses);
   }
-  return null;
+  return;
 };

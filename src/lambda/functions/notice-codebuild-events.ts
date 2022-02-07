@@ -1,7 +1,5 @@
-import * as util from "util";
-
 import { OriginalEventBase } from "./event-bridge";
-import { SlackMessage, postSlackMessage } from "./slack";
+import { Header, Section, SlackMessage, postSlackMessage } from "./slack";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/sample-build-notifications.html#sample-build-notifications-ref
 interface CodeBuildOriginalEvent extends OriginalEventBase {
@@ -49,9 +47,15 @@ interface CodeBuildOriginalEvent extends OriginalEventBase {
     };
   };
 }
+
 interface HandlerParameters {
   originalEvent: CodeBuildOriginalEvent;
   slackWebhookUrls: string[];
+}
+
+interface Context {
+  region: string;
+  account: string;
 }
 
 const getParametersFromEnvVar = (name: string, example: string): string => {
@@ -60,22 +64,13 @@ const getParametersFromEnvVar = (name: string, example: string): string => {
   // If the required environment variables do not exist, the process is exited
   if (target === undefined) {
     throw new Error(
-      `The region name environment variable (${name}) is not specified. e.g. ${example}`
+      `The environment variable "${name}" is not specified. e.g. ${example}`
     );
   }
   return target;
 };
 
-interface Header {
-  type: "header";
-  block_id: "header";
-  text: {
-    type: "plain_text";
-    text: string;
-  };
-}
-
-const buildHeader = (event: HandlerParameters): Header => {
+const buildHeaderSection = (event: HandlerParameters): Header => {
   const buildStatus = event.originalEvent.detail["build-status"];
 
   return {
@@ -88,20 +83,6 @@ const buildHeader = (event: HandlerParameters): Header => {
   };
 };
 
-interface SectionField {
-  type: string;
-  text: string;
-}
-interface Section {
-  type: "section";
-  block_id: string;
-  fields: SectionField[];
-}
-
-interface Context {
-  region: string;
-  account: string;
-}
 const buildFieldsSection = (
   event: HandlerParameters,
   context: Context
@@ -109,15 +90,19 @@ const buildFieldsSection = (
   // Name of the CodeBuild project
   const projectName = event.originalEvent.detail["project-name"];
 
-  // Build ID of CodeBuild
-  const buildId = event.originalEvent.detail["build-id"];
+  // Build ARN of CodeBuild
+  // e.g. arn:aws:codebuild:us-east-1:123456789012:build/ProjectXX11223-W1omLb3AtUBB:e03db6f7-fec3-4851-b368-687b0ab51809
+  const buildArn = event.originalEvent.detail["build-id"];
 
   // Build status of CodeBuild
   const buildStatus = event.originalEvent.detail["build-status"];
 
-  const projectNameInBuildId = buildId.substring(buildId.indexOf(projectName));
+  // Build ID
+  // e.g. ProjectXX11223-W1omLb3AtUBB:e03db6f7-fec3-4851-b368-687b0ab51809
+  const buildId = buildArn.substring(buildArn.indexOf(projectName));
+
   // AWS Management Console URL
-  const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${context.account}/projects/${projectName}/build/${projectNameInBuildId}?region=${context.region}`;
+  const consoleUrl = `https://console.aws.amazon.com/codesuite/codebuild/${context.account}/projects/${projectName}/build/${buildId}?region=${context.region}`;
 
   const fields = [
     {
@@ -156,7 +141,7 @@ export const handler = async (
   };
 
   // Define Slack message
-  const header = buildHeader(event);
+  const header = buildHeaderSection(event);
   const fields = buildFieldsSection(event, context);
   const slackMessage: SlackMessage = {
     blocks: [
@@ -170,12 +155,11 @@ export const handler = async (
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
 
   // Send a message to the specified Slack webhook URL
-  const responses = await Promise.all(
+  await Promise.all(
     event.slackWebhookUrls.map((slackWebhookUrl) =>
       postSlackMessage(slackWebhookUrl, slackMessage)
     )
   );
-  console.log(`responses : ${util.inspect(responses)}`);
 
   return;
 };
