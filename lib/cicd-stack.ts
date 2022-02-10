@@ -72,7 +72,7 @@ export class CicdStack extends Stack {
     );
 
     // Allow S3 bucket operations from the AWS account of the deployment destination
-    if (typeof props?.deploymentDestinationAccounts != "undefined") {
+    if (props.deploymentDestinationAccounts !== undefined) {
       props.deploymentDestinationAccounts.forEach(
         (deploymentDestinationAccount) => {
           props.artifactBucket.addToResourcePolicy(
@@ -321,7 +321,7 @@ export class CicdStack extends Stack {
       artifactBucket: props.artifactBucket,
     });
 
-    if (props.addPipelineForDevelopBranch == true) {
+    if (props.addPipelineForDevelopBranch === true) {
       // develop branch
       const buildSpecDevelopBranch = codebuild.BuildSpec.fromObject({
         version: "0.2",

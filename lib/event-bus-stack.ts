@@ -16,7 +16,7 @@ export class EventBusStack extends Stack {
     });
 
     // If the AWS account to access EventBus is not specified, finish the process
-    if (typeof props?.eventsSourceAccounts == "undefined") process.exit(0);
+    if (props.eventsSourceAccounts === undefined) process.exit(0);
 
     // Add to the policy principal the number of AWS accounts that access the Event Bus
     props.eventsSourceAccounts.forEach((sourceAccount: string) => {
