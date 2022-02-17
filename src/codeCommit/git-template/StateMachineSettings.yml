@@ -40,9 +40,10 @@
   
 Settings:
   deployment_destination_account_iam_role_arn: 
-  cron: 
-  event_pattern: 
-  event_bus_arn: 
+  event_bridge_rule:
+    - cron: 
+    - event_pattern: 
+      event_bus_arn: 
   target_event_bus_arn_after_execution: 
   xray_tracing: false
   iam_policy_document: 

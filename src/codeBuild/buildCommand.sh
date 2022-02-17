@@ -9,9 +9,15 @@ STATE_MACHINE_NAME="$3"
 STACK_UNIQUE_ID="$4"
 
 echo DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN : $DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN
-echo CRON : "'$CRON'"
-echo EVENT_PATTERN : $EVENT_PATTERN
-echo EVENT_BUS_ARN : $EVENT_BUS_ARN
+
+IFS=';'; CRON_ARRAY=($_CRON_ARRAY); unset IFS
+IFS=';'; EVENT_PATTERN_ARRAY=($_EVENT_PATTERN_ARRAY); unset IFS
+IFS=';'; EVENT_BUS_ARN_ARRAY=($_EVENT_BUS_ARN_ARRAY); unset IFS
+
+echo "${CRON_ARRAY[@]}"
+echo "${EVENT_PATTERN_ARRAY[@]}"
+echo "${EVENT_BUS_ARN_ARRAY[@]}"
+
 echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : $TARGET_EVENT_BUS_ARN_AFTER_EXECUTION
 echo XRAY_TRACING : $XRAY_TRACING
 echo IAM_POLICY_DOCUMENT : $IAM_POLICY_DOCUMENT
@@ -55,9 +61,21 @@ if [ -s ./state_machine/StateMachineWorkFlow.asl.json ]; then
       --parameter-overrides \
         StateMachineName=$STATE_MACHINE_NAME \
         StackUniqueId=$STACK_UNIQUE_ID \
-        Cron="'$CRON'" \
-        EventPattern="'$EVENT_PATTERN'" \
-        EventBusArn=$EVENT_BUS_ARN \
+        Cron1="'${CRON_ARRAY[0]}'" \
+        Cron2="'${CRON_ARRAY[1]}'" \
+        Cron3="'${CRON_ARRAY[2]}'" \
+        Cron4="'${CRON_ARRAY[3]}'" \
+        Cron5="'${CRON_ARRAY[4]}'" \
+        EventPattern1="'${EVENT_PATTERN_ARRAY[0]}'" \
+        EventPattern2="'${EVENT_PATTERN_ARRAY[1]}'" \
+        EventPattern3="'${EVENT_PATTERN_ARRAY[2]}'" \
+        EventPattern4="'${EVENT_PATTERN_ARRAY[3]}'" \
+        EventPattern5="'${EVENT_PATTERN_ARRAY[4]}'" \
+        EventBusArn1="'${EVENT_BUS_ARN_ARRAY[0]}'" \
+        EventBusArn2="'${EVENT_BUS_ARN_ARRAY[1]}'" \
+        EventBusArn3="'${EVENT_BUS_ARN_ARRAY[2]}'" \
+        EventBusArn4="'${EVENT_BUS_ARN_ARRAY[3]}'" \
+        EventBusArn5="'${EVENT_BUS_ARN_ARRAY[4]}'" \
         TargetEventBusArnAfterExecution=$TARGET_EVENT_BUS_ARN_AFTER_EXECUTION \
         XRayTracing=$XRAY_TRACING \
         IamPolicyDocument="'$IAM_POLICY_DOCUMENT'" \
