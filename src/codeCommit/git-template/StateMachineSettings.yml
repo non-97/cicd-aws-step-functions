@@ -2,17 +2,39 @@
 #
 # Settings:
 #   deployment_destination_account_iam_role_arn: arn:aws:iam::<AWS Account ID>:role/SamDeployRoleStack-SamDeployRole-xxxx
-#   cron: cron(15 10 * * ? *)
-#   event_pattern: {
-#     "source": ["aws.states"],
-#     "detail-type": ["Step Functions Execution Status Change"],
-#     "detail": {
-#       "status": ["SUCCEEDED"],
-#       "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
-#     }
-#   }
-#   event_bus_arn: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
-#   target_event_bus_arn_after_execution: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+#   event_bridge_rule:
+#     - cron: cron(15 9 * * ? *)
+#     - cron: cron(20 17 * * ? *)
+#     - event_pattern: {
+#         "source": ["aws.states"],
+#         "detail-type": ["Step Functions Execution Status Change"],
+#         "detail": {
+#           "status": ["SUCCEEDED"],
+#           "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:AAA"]
+#         }
+#       }
+#       event_bus_arn: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+#     - event_pattern: {
+#         "source": ["aws.states"],
+#         "detail-type": ["Step Functions Execution Status Change"],
+#         "detail": {
+#           "status": ["SUCCEEDED"],
+#           "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:BBB"]
+#         }
+#       }
+#       event_bus_arn: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+#     - event_pattern: {
+#         "source": ["aws.states"],
+#         "detail-type": ["Step Functions Execution Status Change"],
+#         "detail": {
+#           "status": ["SUCCEEDED"],
+#           "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:CCC"]
+#         }
+#       }
+#       event_bus_arn: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+#   target_event_bus_arn: 
+#     - arn:aws:events:us-east-1:<AWS Account ID>:event-bus/StateMachineEventBus
+#     - arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
 #   xray_tracing: false
 #   iam_policy_document: {
 #       "Version": "2012-10-17",
@@ -44,7 +66,7 @@ Settings:
     - cron: 
     - event_pattern: 
       event_bus_arn: 
-  target_event_bus_arn_after_execution: 
+  target_event_bus_arn: 
   xray_tracing: false
   iam_policy_document: 
   tags:

@@ -28,8 +28,11 @@ IFS=$'\n'; for EVENT_BUS_ARN in $(yq -rc ".Settings.event_bridge_rule[].event_bu
 done
 echo "${EVENT_BUS_ARN_ARRAY[@]}"
 
-TARGET_EVENT_BUS_ARN_AFTER_EXECUTION=`yq -r ".Settings.target_event_bus_arn_after_execution" ${REPOSITORY_PATH}StateMachineSettings.yml`
-echo TARGET_EVENT_BUS_ARN_AFTER_EXECUTION : $TARGET_EVENT_BUS_ARN_AFTER_EXECUTION
+i=0
+IFS=$'\n'; for TARGET_EVENT_BUS_ARN in $(yq -rc ".Settings.target_event_bus_arn[]" ${REPOSITORY_PATH}StateMachineSettings.yml); do
+  TARGET_EVENT_BUS_ARN_ARRAY[$((i++))]=`echo $TARGET_EVENT_BUS_ARN`
+done
+echo "${TARGET_EVENT_BUS_ARN_ARRAY[@]}"
 
 XRAY_TRACING=`yq -r ".Settings.xray_tracing" ${REPOSITORY_PATH}StateMachineSettings.yml`
 echo XRAY_TRACING : $XRAY_TRACING
@@ -58,3 +61,4 @@ cp -p $SAM_FILE_NAME ./sam-sfn/$SAM_FILE_NAME
 _CRON_ARRAY=$(IFS=';'; echo "${CRON_ARRAY[*]}")
 _EVENT_PATTERN_ARRAY=$(IFS=';'; echo "${EVENT_PATTERN_ARRAY[*]}")
 _EVENT_BUS_ARN_ARRAY=$(IFS=';'; echo "${EVENT_BUS_ARN_ARRAY[*]}")
+_TARGET_EVENT_BUS_ARN_ARRAY=$(IFS=';'; echo "${TARGET_EVENT_BUS_ARN_ARRAY[*]}")
