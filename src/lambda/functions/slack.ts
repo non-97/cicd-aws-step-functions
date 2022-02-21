@@ -30,6 +30,33 @@ export interface SlackMessage {
   blocks: (Header | Section | Divider)[];
 }
 
+export interface Field {
+  header: string;
+  body: string;
+}
+
+export const buildHeader = (text: string): Header => {
+  return {
+    type: "header",
+    block_id: "header",
+    text: {
+      type: "plain_text",
+      text,
+    },
+  };
+};
+
+export const buildBody = (fields: Field[]): Section => {
+  return {
+    type: "section",
+    block_id: "fieldsSection",
+    fields: fields.map(({ header, body }) => ({
+      type: "mrkdwn",
+      text: `*${header}:*\n${body}`,
+    })),
+  };
+};
+
 export const postSlackMessage = async (
   slackWebhookUrl: string,
   slackMessage: SlackMessage
