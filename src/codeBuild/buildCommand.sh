@@ -89,7 +89,7 @@ if [ -s ./state_machine/StateMachineWorkFlow.asl.json ]; then
     sam deploy \
       --template-file output.yml \
       --s3-bucket $BUCKET_NAME \
-      --s3-prefix ${STATE_MACHINE_NAME}_{$AWS_ACCOUNT} \
+      --s3-prefix ${STATE_MACHINE_NAME}_${AWS_ACCOUNT} \
       --stack-name $STATE_MACHINE_NAME \
       --capabilities CAPABILITY_IAM \
       --no-fail-on-empty-changeset \
