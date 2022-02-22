@@ -21,9 +21,10 @@ if (
   process.env.APP_TEAM_WEBHOOK_URL === undefined ||
   process.env.APP_TEAM_MANAGER_WEBHOOK_URL === undefined ||
   process.env.INFRA_TEAM_WEBHOOK_URL === undefined ||
-  process.env.APP_TEAM_IAM_USER_ARN === undefined ||
-  process.env.APP_TEAM_MANAGER_IAM_USER_ARN === undefined ||
-  process.env.INFRA_TEAM_IAM_USER_ARN === undefined
+  process.env.APP_TEAM_IAM_USER_ARNS === undefined ||
+  process.env.APP_TEAM_MANAGER_IAM_USER_ARNS === undefined ||
+  process.env.INFRA_TEAM_IAM_USER_ARNS === undefined ||
+  process.env.STATE_MACHINE_NAMES === undefined
 ) {
   console.error(`
     There is not enough input in the .env file.
@@ -47,15 +48,15 @@ const artifactBucketStack = new ArtifactBucketStack(app, "ArtifactBucketStack");
 
 // Stack of IAM roles and CodeCommit approval rule templates for each role
 const roleStack = new RoleStack(app, "RoleStack", {
-  appTeamIamUserArns: process.env.APP_TEAM_IAM_USER_ARN.replace(
+  appTeamIamUserArns: process.env.APP_TEAM_IAM_USER_ARNS.replace(
     /\s+/g,
     ""
   ).split(","),
-  appTeamManagerIamUserArns: process.env.APP_TEAM_MANAGER_IAM_USER_ARN.replace(
+  appTeamManagerIamUserArns: process.env.APP_TEAM_MANAGER_IAM_USER_ARNS.replace(
     /\s+/g,
     ""
   ).split(","),
-  infraTeamIamUserArns: process.env.INFRA_TEAM_IAM_USER_ARN.replace(
+  infraTeamIamUserArns: process.env.INFRA_TEAM_IAM_USER_ARNS.replace(
     /\s+/g,
     ""
   ).split(","),
@@ -87,52 +88,34 @@ const noticeSfnCicdEventsFunctionStack = new NoticeSfnCicdEventsFunctionStack(
 new WorkflowSupportFunctionStack(app, "WorkflowSupportFunctionStack");
 
 // Stack for CI/CD of AWS Step Functions
-// To create multiple StateMachine, duplicate this stack
-new CicdStack(app, "StateMachineTest001CicdStack", {
-  stateMachineName: "StateMachineTest001",
-  artifactBucket: artifactBucketStack.artifactBucket,
-  sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
-  gitTemplateDirectoryPath: "./src/codeCommit/git-template",
-  samTemplateFileName: "sam-template.yml",
-  deploymentDestinationAccounts:
-    process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),
-  addPipelineForDevelopBranch: false,
-  appTeamWebhookUrl: appTeamWebhookUrl,
-  appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
-  infraTeamWebhookUrl: infraTeamWebhookUrl,
-  mainBranchApprovalRuleTemplate: roleStack.mainBranchApprovalRuleTemplate,
-  developBranchApprovalRuleTemplate:
-    roleStack.developBranchApprovalRuleTemplate,
-  noticePullRequestEventsFunction:
-    noticeSfnCicdEventsFunctionStack.noticePullRequestEventsFunction,
-  noticeCodeBuildEventsFunction:
-    noticeSfnCicdEventsFunctionStack.noticeCodeBuildEventsFunction,
-  noticeExecuteStateMachineEventsFunction:
-    noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
-});
-
-new CicdStack(app, "StateMachineTest002CicdStack", {
-  stateMachineName: "StateMachineTest002",
-  artifactBucket: artifactBucketStack.artifactBucket,
-  sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
-  gitTemplateDirectoryPath: "./src/codeCommit/git-template",
-  samTemplateFileName: "sam-template.yml",
-  deploymentDestinationAccounts:
-    process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(","),
-  addPipelineForDevelopBranch: true,
-  appTeamWebhookUrl: appTeamWebhookUrl,
-  appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
-  infraTeamWebhookUrl: infraTeamWebhookUrl,
-  mainBranchApprovalRuleTemplate: roleStack.mainBranchApprovalRuleTemplate,
-  developBranchApprovalRuleTemplate:
-    roleStack.developBranchApprovalRuleTemplate,
-  noticePullRequestEventsFunction:
-    noticeSfnCicdEventsFunctionStack.noticePullRequestEventsFunction,
-  noticeCodeBuildEventsFunction:
-    noticeSfnCicdEventsFunctionStack.noticeCodeBuildEventsFunction,
-  noticeExecuteStateMachineEventsFunction:
-    noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
-});
+process.env.STATE_MACHINE_NAMES.replace(/\s+/g, "")
+  .split(",")
+  .forEach((stateMachineName) => {
+    new CicdStack(app, `${stateMachineName}CicdStack`, {
+      stateMachineName: stateMachineName,
+      artifactBucket: artifactBucketStack.artifactBucket,
+      sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
+      gitTemplateDirectoryPath: "./src/codeCommit/git-template",
+      samTemplateFileName: "sam-template.yml",
+      deploymentDestinationAccounts:
+        process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(
+          ","
+        ),
+      addPipelineForDevelopBranch: false,
+      appTeamWebhookUrl: appTeamWebhookUrl,
+      appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
+      infraTeamWebhookUrl: infraTeamWebhookUrl,
+      mainBranchApprovalRuleTemplate: roleStack.mainBranchApprovalRuleTemplate,
+      developBranchApprovalRuleTemplate:
+        roleStack.developBranchApprovalRuleTemplate,
+      noticePullRequestEventsFunction:
+        noticeSfnCicdEventsFunctionStack.noticePullRequestEventsFunction,
+      noticeCodeBuildEventsFunction:
+        noticeSfnCicdEventsFunctionStack.noticeCodeBuildEventsFunction,
+      noticeExecuteStateMachineEventsFunction:
+        noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
+    });
+  });
 
 // EC2 instances are used to hit the EC2 API in the state machine
 // Not used in production operations
