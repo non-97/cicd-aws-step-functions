@@ -24,7 +24,7 @@ if (
   process.env.APP_TEAM_IAM_USER_ARNS === undefined ||
   process.env.APP_TEAM_MANAGER_IAM_USER_ARNS === undefined ||
   process.env.INFRA_TEAM_IAM_USER_ARNS === undefined ||
-  process.env.STATE_MACHINE_NAMES === undefined
+  process.env.STATE_MACHINES === undefined
 ) {
   console.error(`
     There is not enough input in the .env file.
@@ -88,11 +88,13 @@ const noticeSfnCicdEventsFunctionStack = new NoticeSfnCicdEventsFunctionStack(
 new WorkflowSupportFunctionStack(app, "WorkflowSupportFunctionStack");
 
 // Stack for CI/CD of AWS Step Functions
-process.env.STATE_MACHINE_NAMES.replace(/\s+/g, "")
-  .split(",")
-  .forEach((stateMachineName) => {
-    new CicdStack(app, `${stateMachineName}CicdStack`, {
-      stateMachineName: stateMachineName,
+JSON.parse(process.env.STATE_MACHINES.replace(/\s+/g, "")).forEach(
+  (stateMachine: {
+    STATE_MACHINE_NAMES: string;
+    ADD_PIPELINE_FOR_DEVELOP_BRANCH: boolean;
+  }) => {
+    new CicdStack(app, `${stateMachine.STATE_MACHINE_NAMES}CicdStack`, {
+      stateMachineName: stateMachine.STATE_MACHINE_NAMES,
       artifactBucket: artifactBucketStack.artifactBucket,
       sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
       gitTemplateDirectoryPath: "./src/codeCommit/git-template",
@@ -101,7 +103,7 @@ process.env.STATE_MACHINE_NAMES.replace(/\s+/g, "")
         process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(
           ","
         ),
-      addPipelineForDevelopBranch: false,
+      addPipelineForDevelopBranch: stateMachine.ADD_PIPELINE_FOR_DEVELOP_BRANCH,
       appTeamWebhookUrl: appTeamWebhookUrl,
       appTeamManagerWebhookUrl: appTeamManagerWebhookUrl,
       infraTeamWebhookUrl: infraTeamWebhookUrl,
@@ -115,7 +117,8 @@ process.env.STATE_MACHINE_NAMES.replace(/\s+/g, "")
       noticeExecuteStateMachineEventsFunction:
         noticeSfnCicdEventsFunctionStack.noticeExecuteStateMachineEventsFunction,
     });
-  });
+  }
+);
 
 // EC2 instances are used to hit the EC2 API in the state machine
 // Not used in production operations
