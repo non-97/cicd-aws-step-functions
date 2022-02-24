@@ -55,6 +55,13 @@ npm install
 # APP_TEAM_WEBHOOK_URL=https://hooks.slack.com/services/xxxx
 # APP_TEAM_MANAGER_WEBHOOK_URL=https://hooks.slack.com/services/yyyy
 # INFRA_TEAM_WEBHOOK_URL=https://hooks.slack.com/services/zzzz
+#
+# # Name of State Machine
+# # Used to manage stack of CI/CD pipelines for State Machine
+# STATE_MACHINE_NAMES=" 
+#   StateMachineTest001,
+#   StateMachineTest002
+# "
 vi .env
 
 npx cdk bootstrap
