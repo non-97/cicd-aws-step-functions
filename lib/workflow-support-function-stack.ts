@@ -18,11 +18,13 @@ export class WorkflowSupportFunctionStack extends Stack {
       runtime: lambda.Runtime.NODEJS_14_X,
       bundling: {
         minify: true,
+        sourceMap: true,
       },
       environment: {
         UTC_OFFSET: "9",
         BASE_LOCAL_TIME: "07:30",
         REGION: this.region,
+        NODE_OPTIONS: "--enable-source-maps",
       },
       role: new iam.Role(
         this,
@@ -59,10 +61,12 @@ export class WorkflowSupportFunctionStack extends Stack {
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,
+          sourceMap: true,
         },
         environment: {
           UTC_OFFSET: "9",
           BASE_LOCAL_TIME: "07:30",
+          NODE_OPTIONS: "--enable-source-maps",
         },
         role: new iam.Role(
           this,

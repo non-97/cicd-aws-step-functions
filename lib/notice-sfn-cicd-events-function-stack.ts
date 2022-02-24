@@ -25,9 +25,11 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,
+          sourceMap: true,
         },
         environment: {
           REGION: this.region,
+          NODE_OPTIONS: "--enable-source-maps",
         },
         role: new iam.Role(this, "NoticePullRequestEventsFunctionIamRole", {
           assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
@@ -68,10 +70,12 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,
+          sourceMap: true,
         },
         environment: {
           REGION: this.region,
           ACCOUNT: this.account,
+          NODE_OPTIONS: "--enable-source-maps",
         },
         role: new iam.Role(this, "NoticeCodeBuildEventsFunctionIamRole", {
           assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
@@ -94,10 +98,12 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,
+          sourceMap: true,
         },
         environment: {
           UTC_OFFSET: "9",
           REGION: this.region,
+          NODE_OPTIONS: "--enable-source-maps",
         },
         role: new iam.Role(
           this,
