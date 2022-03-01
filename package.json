@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@types/adm-zip": "^0.4.34",
+    "@types/aws-lambda": "^8.10.92",
     "@types/jest": "26.0.10",
     "@types/node": "10.17.27",
     "aws-cdk": "^2.13.0",

@@ -6,7 +6,7 @@ import {
   buildBody,
   postSlackMessage,
 } from "./slack";
-import { getParametersFromEnvVar } from "./utility";
+import { getRegion, getAWSAccount } from "./aws-utils";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/sample-build-notifications.html#sample-build-notifications-ref
 interface CodeBuildOriginalEvent extends OriginalEventBase {
@@ -66,13 +66,14 @@ interface Context {
 }
 
 export const handler = async (
-  event: HandlerParameters
+  event: HandlerParameters,
+  lambdaContext: AWSLambda.Context
 ): Promise<void | Error> => {
   console.log(`event : ${JSON.stringify(event, null, 2)}`);
 
   const context = {
-    region: getParametersFromEnvVar("REGION", "us-east-1"),
-    account: getParametersFromEnvVar("ACCOUNT", "123456789012"),
+    region: getRegion(),
+    account: getAWSAccount(lambdaContext),
   };
 
   // Define Slack message
@@ -91,15 +92,20 @@ export const handler = async (
     ],
   };
   console.log(`slackMessage : ${JSON.stringify(slackMessage, null, 2)}`);
+  await sendMessageToAllSlackChannels(event, slackMessage);
 
+  return;
+};
+const sendMessageToAllSlackChannels = async (
+  event: HandlerParameters,
+  slackMessage: SlackMessage
+) => {
   // Send a message to the specified Slack webhook URL
   await Promise.all(
     event.slackWebhookUrls.map((slackWebhookUrl) =>
       postSlackMessage(slackWebhookUrl, slackMessage)
     )
   );
-
-  return;
 };
 
 const collectDisplayInfo = (event: HandlerParameters, context: Context) => {
