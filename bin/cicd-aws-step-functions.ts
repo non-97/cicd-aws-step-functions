@@ -97,7 +97,7 @@ JSON.parse(process.env.STATE_MACHINES.replace(/\s+/g, "")).forEach(
       stateMachineName: stateMachine.STATE_MACHINE_NAMES,
       artifactBucket: artifactBucketStack.artifactBucket,
       sfnTemplateBucket: sfnTemplateBucketStack.sfnTemplateBucket,
-      gitTemplateDirectoryPath: "./src/codeCommit/git-template",
+      gitTemplateDirectoryPath: "./src/codecommit/git-template",
       samTemplateFileName: "sam-template.yml",
       deploymentDestinationAccounts:
         process.env.DEPLOYMENT_DESTINATION_ACCOUNTS?.replace(/\s+/g, "").split(

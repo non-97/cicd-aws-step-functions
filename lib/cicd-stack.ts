@@ -247,14 +247,14 @@ export class CicdStack extends Stack {
         },
         pre_build: {
           commands: [
-            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/preBuildCommand.sh .`,
-            `source ./preBuildCommand.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} ${mainBranchRepositoryDirectory}`,
+            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/pre_build_command.sh .`,
+            `source ./pre_build_command.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} ${mainBranchRepositoryDirectory}`,
           ],
         },
         build: {
           commands: [
-            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/buildCommand.sh .`,
-            `source ./buildCommand.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId} ${mainBranchRepositoryDirectory}`,
+            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/build_command.sh .`,
+            `source ./build_command.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId} ${mainBranchRepositoryDirectory}`,
           ],
         },
         post_build: {

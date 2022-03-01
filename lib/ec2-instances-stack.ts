@@ -39,7 +39,7 @@ export class Ec2InstancesStack extends Stack {
 
     // User data for Amazon Linux
     const userDataParameter = fs.readFileSync(
-      "./src/ec2/userDataAmazonLinux2.sh",
+      "./src/ec2/user_data_amazon_linux2.sh",
       "utf8"
     );
     const userDataAmazonLinux2 = ec2.UserData.forLinux({
@@ -68,7 +68,7 @@ export class Ec2InstancesStack extends Stack {
 
     // Read CloudWatch parameters for Linux
     const cloudWatchParameter = fs.readFileSync(
-      "./src/cloudWatch/AmazonCloudWatch-linux.json",
+      "./src/cloudwatch/AmazonCloudWatch-linux.json",
       "utf8"
     );
 
