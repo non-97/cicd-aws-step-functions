@@ -503,79 +503,31 @@ Resources:
         - Arn: !Ref TargetEventBusArn1
           Id: TargetEventBusArn1
           RoleArn: !GetAtt InvokeEventBusRole1.Arn
-  TargetEventBusArnRule2: 
-    Condition: ExistsTargetEventBusArn2
-    Type: AWS::Events::Rule
-    Properties: 
-      Description: TargetEventBusArnRule
-      EventPattern: {
-        "source": ["aws.states"],
-        "detail-type": ["Step Functions Execution Status Change"],
-        "detail": {
-          "status": ["SUCCEEDED"],
-          "stateMachineArn": [!Ref StateMachine]
-        }
-      }
-      State: ENABLED
-      Targets: 
-        - Arn: !Ref TargetEventBusArn2
-          Id: TargetEventBusArn2
-          RoleArn: !GetAtt InvokeEventBusRole2.Arn
-  TargetEventBusArnRule3: 
-    Condition: ExistsTargetEventBusArn3
-    Type: AWS::Events::Rule
-    Properties: 
-      Description: TargetEventBusArnRule
-      EventPattern: {
-        "source": ["aws.states"],
-        "detail-type": ["Step Functions Execution Status Change"],
-        "detail": {
-          "status": ["SUCCEEDED"],
-          "stateMachineArn": [!Ref StateMachine]
-        }
-      }
-      State: ENABLED
-      Targets: 
-        - Arn: !Ref TargetEventBusArn3
-          Id: TargetEventBusArn3
-          RoleArn: !GetAtt InvokeEventBusRole3.Arn
-  TargetEventBusArnRule4: 
-    Condition: ExistsTargetEventBusArn4
-    Type: AWS::Events::Rule
-    Properties: 
-      Description: TargetEventBusArnRule
-      EventPattern: {
-        "source": ["aws.states"],
-        "detail-type": ["Step Functions Execution Status Change"],
-        "detail": {
-          "status": ["SUCCEEDED"],
-          "stateMachineArn": [!Ref StateMachine]
-        }
-      }
-      State: ENABLED
-      Targets: 
-        - Arn: !Ref TargetEventBusArn4
-          Id: TargetEventBusArn4
-          RoleArn: !GetAtt InvokeEventBusRole4.Arn
-  TargetEventBusArnRule5: 
-    Condition: ExistsTargetEventBusArn5
-    Type: AWS::Events::Rule
-    Properties: 
-      Description: TargetEventBusArnRule
-      EventPattern: {
-        "source": ["aws.states"],
-        "detail-type": ["Step Functions Execution Status Change"],
-        "detail": {
-          "status": ["SUCCEEDED"],
-          "stateMachineArn": [!Ref StateMachine]
-        }
-      }
-      State: ENABLED
-      Targets: 
-        - Arn: !Ref TargetEventBusArn5
-          Id: TargetEventBusArn5
-          RoleArn: !GetAtt InvokeEventBusRole5.Arn
-
+        - !If
+          - ExistsTargetEventBusArn2
+          - Arn: !Ref TargetEventBusArn2
+            Id: TargetEventBusArn2
+            RoleArn: !GetAtt InvokeEventBusRole2.Arn
+          - !Ref AWS::NoValue
+        - !If
+          - ExistsTargetEventBusArn3
+          - Arn: !Ref TargetEventBusArn3
+            Id: TargetEventBusArn3
+            RoleArn: !GetAtt InvokeEventBusRole3.Arn
+          - !Ref AWS::NoValue
+        - !If
+          - ExistsTargetEventBusArn4
+          - Arn: !Ref TargetEventBusArn4
+            Id: TargetEventBusArn4
+            RoleArn: !GetAtt InvokeEventBusRole4.Arn
+          - !Ref AWS::NoValue
+        - !If
+          - ExistsTargetEventBusArn5
+          - Arn: !Ref TargetEventBusArn5
+            Id: TargetEventBusArn5
+            RoleArn: !GetAtt InvokeEventBusRole5.Arn
+          - !Ref AWS::NoValue
+          
   InvokeEventBusRole1: 
       Type: AWS::IAM::Role
       Condition: ExistsTargetEventBusArn1
