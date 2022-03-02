@@ -51,9 +51,7 @@ if [[ -s ./state_machine/StateMachineWorkFlow.asl.json ]]; then
     --s3-prefix ${state_machine_name}_${AWS_ACCOUNT} \
     --output-template-file output.yml
 
-  if [[ -n "${tags_list}" ]]; then
-
-    sam deploy \
+  deploy_command=(sam deploy \
       --template-file output.yml \
       --s3-bucket ${bucket_name} \
       --s3-prefix ${state_machine_name}_${AWS_ACCOUNT} \
@@ -84,41 +82,13 @@ if [[ -s ./state_machine/StateMachineWorkFlow.asl.json ]]; then
         TargetEventBusArn4="'${target_event_bus_arn_array[3]}'" \
         TargetEventBusArn5="'${target_event_bus_arn_array[4]}'" \
         XRayTracing=${xray_tracing} \
-        IamPolicyDocument="'${iam_policy_document}'" \
+        IamPolicyDocument="'${iam_policy_document}'")
+
+  if [[ -n "${tags_list}" ]]; then
+    "${deploy_command[@]}" \
       --tags "'${tags_list}'"
   else
-    sam deploy \
-      --template-file output.yml \
-      --s3-bucket ${bucket_name} \
-      --s3-prefix ${state_machine_name}_${AWS_ACCOUNT} \
-      --stack-name ${state_machine_name} \
-      --capabilities CAPABILITY_IAM \
-      --no-fail-on-empty-changeset \
-      --parameter-overrides \
-        StateMachineName=${state_machine_name} \
-        StackUniqueId=${stack_unique_id} \
-        Cron1="'${cron_array[0]}'" \
-        Cron2="'${cron_array[1]}'" \
-        Cron3="'${cron_array[2]}'" \
-        Cron4="'${cron_array[3]}'" \
-        Cron5="'${cron_array[4]}'" \
-        EventPattern1="'${event_pattern_array[0]}'" \
-        EventPattern2="'${event_pattern_array[1]}'" \
-        EventPattern3="'${event_pattern_array[2]}'" \
-        EventPattern4="'${event_pattern_array[3]}'" \
-        EventPattern5="'${event_pattern_array[4]}'" \
-        EventBusArn1="'${event_bus_arn_array[0]}'" \
-        EventBusArn2="'${event_bus_arn_array[1]}'" \
-        EventBusArn3="'${event_bus_arn_array[2]}'" \
-        EventBusArn4="'${event_bus_arn_array[3]}'" \
-        EventBusArn5="'${event_bus_arn_array[4]}'" \
-        TargetEventBusArn1="'${target_event_bus_arn_array[0]}'" \
-        TargetEventBusArn2="'${target_event_bus_arn_array[1]}'" \
-        TargetEventBusArn3="'${target_event_bus_arn_array[2]}'" \
-        TargetEventBusArn4="'${target_event_bus_arn_array[3]}'" \
-        TargetEventBusArn5="'${target_event_bus_arn_array[4]}'" \
-        XRayTracing=${xray_tracing} \
-        IamPolicyDocument="'${iam_policy_document}'"
+    "${deploy_command[@]}"
   fi
   aws cloudformation describe-stacks --stack-name ${state_machine_name}
 else
