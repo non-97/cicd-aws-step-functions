@@ -50,6 +50,7 @@ export class WorkflowSupportFunctionStack extends Stack {
         }
       ),
       logRetention: logs.RetentionDays.TWO_WEEKS,
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     // Lambda function to calculate the waiting time until a specified time
@@ -81,6 +82,7 @@ export class WorkflowSupportFunctionStack extends Stack {
           }
         ),
         logRetention: logs.RetentionDays.TWO_WEEKS,
+        tracing: lambda.Tracing.ACTIVE,
       }
     );
   }

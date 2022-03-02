@@ -58,6 +58,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
           ],
         }),
         logRetention: logs.RetentionDays.TWO_WEEKS,
+        tracing: lambda.Tracing.ACTIVE,
       }
     );
 
@@ -86,6 +87,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
           ],
         }),
         logRetention: logs.RetentionDays.TWO_WEEKS,
+        tracing: lambda.Tracing.ACTIVE,
       }
     );
 
@@ -118,6 +120,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
           }
         ),
         logRetention: logs.RetentionDays.TWO_WEEKS,
+        tracing: lambda.Tracing.ACTIVE,
       }
     );
   }
