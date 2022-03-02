@@ -11,27 +11,39 @@ deployment_destination_account_iam_role_arn=$(yq -r ".Settings.deployment_destin
 echo deployment_destination_account_iam_role_arn : ${deployment_destination_account_iam_role_arn}
 
 i=0
+counter_text=_CronCount
 IFS=$'\n'; for cron in $(yq -rc ".Settings.event_bridge_rule[].cron? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  sed -i -e "/${counter_text}/{ h; s/${counter_text}/${i}/g; G; }" build_command.sh
   cron_array[$((i++))]=$(echo ${cron})
 done
+sed -i "/${counter_text}/d" build_command.sh
 echo "${cron_array[@]}"
 
 i=0
+counter_text=_EventPatternCount
 IFS=$'\n'; for event_pattern in $(yq -rc ".Settings.event_bridge_rule[].event_pattern? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  sed -i -e "/${counter_text}/{ h; s/${counter_text}/${i}/g; G; }" build_command.sh
   event_pattern_array[$((i++))]=$(echo ${event_pattern})
 done
+sed -i "/${counter_text}/d" build_command.sh
 echo "${event_pattern_array[@]}"
 
 i=0
+counter_text=_EventBusArnCount
 IFS=$'\n'; for event_bus_arn in $(yq -rc ".Settings.event_bridge_rule[].event_bus_arn? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  sed -i -e "/${counter_text}/{ h; s/${counter_text}/${i}/g; G; }" build_command.sh
   event_bus_arn_array[$((i++))]=$(echo ${event_bus_arn})
 done
+sed -i "/${counter_text}/d" build_command.sh
 echo "${event_bus_arn_array[@]}"
 
 i=0
+counter_text=_TargetEventBusArnCount
 IFS=$'\n'; for target_event_bus_arn in $(yq -rc ".Settings.target_event_bus_arn[]" ${repository_path}StateMachineSettings.yml); do
+  sed -i -e "/${counter_text}/{ h; s/${counter_text}/${i}/g; G; }" build_command.sh
   target_event_bus_arn_array[$((i++))]=$(echo ${target_event_bus_arn})
 done
+sed -i "/${counter_text}/d" build_command.sh
 echo "${target_event_bus_arn_array[@]}"
 
 xray_tracing=$(yq -r ".Settings.xray_tracing" ${repository_path}StateMachineSettings.yml)

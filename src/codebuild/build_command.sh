@@ -61,26 +61,10 @@ if [[ -s ./state_machine/StateMachineWorkFlow.asl.json ]]; then
       --parameter-overrides \
         StateMachineName=${state_machine_name} \
         StackUniqueId=${stack_unique_id} \
-        Cron1="'${cron_array[0]}'" \
-        Cron2="'${cron_array[1]}'" \
-        Cron3="'${cron_array[2]}'" \
-        Cron4="'${cron_array[3]}'" \
-        Cron5="'${cron_array[4]}'" \
-        EventPattern1="'${event_pattern_array[0]}'" \
-        EventPattern2="'${event_pattern_array[1]}'" \
-        EventPattern3="'${event_pattern_array[2]}'" \
-        EventPattern4="'${event_pattern_array[3]}'" \
-        EventPattern5="'${event_pattern_array[4]}'" \
-        EventBusArn1="'${event_bus_arn_array[0]}'" \
-        EventBusArn2="'${event_bus_arn_array[1]}'" \
-        EventBusArn3="'${event_bus_arn_array[2]}'" \
-        EventBusArn4="'${event_bus_arn_array[3]}'" \
-        EventBusArn5="'${event_bus_arn_array[4]}'" \
-        TargetEventBusArn1="'${target_event_bus_arn_array[0]}'" \
-        TargetEventBusArn2="'${target_event_bus_arn_array[1]}'" \
-        TargetEventBusArn3="'${target_event_bus_arn_array[2]}'" \
-        TargetEventBusArn4="'${target_event_bus_arn_array[3]}'" \
-        TargetEventBusArn5="'${target_event_bus_arn_array[4]}'" \
+        Cron_CronCount="'${cron_array[_CronCount]}'" \
+        EventPattern_EventPatternCount="'${event_pattern_array[_EventPatternCount]}'" \
+        EventBusArn_EventBusArnCount="'${event_bus_arn_array[_EventBusArnCount]}'" \
+        TargetEventBusArn_TargetEventBusArnCount="'${target_event_bus_arn_array[_TargetEventBusArnCount]}'" \
         XRayTracing=${xray_tracing} \
         IamPolicyDocument="'${iam_policy_document}'")
 
