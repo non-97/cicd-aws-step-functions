@@ -243,17 +243,17 @@ export class CicdStack extends Stack {
             "unzip aws-sam-cli-linux-x86_64.zip -d sam-installation",
             "./sam-installation/install",
             "sam --version",
+            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/pre_build_command.sh .`,
+            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/build_command.sh .`,
           ],
         },
         pre_build: {
           commands: [
-            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/pre_build_command.sh .`,
             `source ./pre_build_command.sh ${props.sfnTemplateBucket.bucketName} ${props.samTemplateFileName} ${mainBranchRepositoryDirectory}`,
           ],
         },
         build: {
           commands: [
-            `aws s3 cp s3://${props.sfnTemplateBucket.bucketName}/build_command.sh .`,
             `source ./build_command.sh ${props.artifactBucket.bucketName} ${props.samTemplateFileName} ${props.stateMachineName} ${stackUniqueId} ${mainBranchRepositoryDirectory}`,
           ],
         },
