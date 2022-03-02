@@ -3,62 +3,62 @@
 # -x to display the command to be executed
 set -x
 
-BUCKET_NAME="$1"
-SAM_FILE_NAME="$2"
-REPOSITORY_PATH="$3"
+bucket_name="$1"
+sam_file_name="$2"
+repository_path="$3"
 
-DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN=`yq -r ".Settings.deployment_destination_account_iam_role_arn" ${REPOSITORY_PATH}StateMachineSettings.yml`
-echo DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN : $DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN
-
-i=0
-IFS=$'\n'; for CRON in $(yq -rc ".Settings.event_bridge_rule[].cron? | select(.!=null)" ${REPOSITORY_PATH}StateMachineSettings.yml); do
-  CRON_ARRAY[$((i++))]=`echo $CRON`
-done
-echo "${CRON_ARRAY[@]}"
+deployment_destination_account_iam_role_arn=$(yq -r ".Settings.deployment_destination_account_iam_role_arn" ${repository_path}StateMachineSettings.yml)
+echo deployment_destination_account_iam_role_arn : ${deployment_destination_account_iam_role_arn}
 
 i=0
-IFS=$'\n'; for EVENT_PATTERN in $(yq -rc ".Settings.event_bridge_rule[].event_pattern? | select(.!=null)" ${REPOSITORY_PATH}StateMachineSettings.yml); do
-  EVENT_PATTERN_ARRAY[$((i++))]=`echo $EVENT_PATTERN`
+IFS=$'\n'; for cron in $(yq -rc ".Settings.event_bridge_rule[].cron? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  cron_array[$((i++))]=$(echo ${cron})
 done
-echo "${EVENT_PATTERN_ARRAY[@]}"
+echo "${cron_array[@]}"
 
 i=0
-IFS=$'\n'; for EVENT_BUS_ARN in $(yq -rc ".Settings.event_bridge_rule[].event_bus_arn? | select(.!=null)" ${REPOSITORY_PATH}StateMachineSettings.yml); do
-  EVENT_BUS_ARN_ARRAY[$((i++))]=`echo $EVENT_BUS_ARN`
+IFS=$'\n'; for event_pattern in $(yq -rc ".Settings.event_bridge_rule[].event_pattern? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  event_pattern_array[$((i++))]=$(echo ${event_pattern})
 done
-echo "${EVENT_BUS_ARN_ARRAY[@]}"
+echo "${event_pattern_array[@]}"
 
 i=0
-IFS=$'\n'; for TARGET_EVENT_BUS_ARN in $(yq -rc ".Settings.target_event_bus_arn[]" ${REPOSITORY_PATH}StateMachineSettings.yml); do
-  TARGET_EVENT_BUS_ARN_ARRAY[$((i++))]=`echo $TARGET_EVENT_BUS_ARN`
+IFS=$'\n'; for event_bus_arn in $(yq -rc ".Settings.event_bridge_rule[].event_bus_arn? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  event_bus_arn_array[$((i++))]=$(echo ${event_bus_arn})
 done
-echo "${TARGET_EVENT_BUS_ARN_ARRAY[@]}"
+echo "${event_bus_arn_array[@]}"
 
-XRAY_TRACING=`yq -r ".Settings.xray_tracing" ${REPOSITORY_PATH}StateMachineSettings.yml`
-echo XRAY_TRACING : $XRAY_TRACING
-
-IAM_POLICY_DOCUMENT=`yq -r ".Settings.iam_policy_document" ${REPOSITORY_PATH}StateMachineSettings.yml`
-echo IAM_POLICY_DOCUMENT : $IAM_POLICY_DOCUMENT
-
-IFS=$'\n'; for TAG in $(yq -rc ".Settings.tags[]" ${REPOSITORY_PATH}StateMachineSettings.yml); do
-  KEY=`echo $TAG | jq -r .Key`
-  VALUE=`echo $TAG | jq -r .Value`
-  TAGS_LIST+=`echo "'$KEY'"="'$VALUE' "`
+i=0
+IFS=$'\n'; for target_event_bus_arn in $(yq -rc ".Settings.target_event_bus_arn[]" ${repository_path}StateMachineSettings.yml); do
+  target_event_bus_arn_array[$((i++))]=$(echo ${target_event_bus_arn})
 done
-echo TAGS_LIST : $TAGS_LIST
+echo "${target_event_bus_arn_array[@]}"
+
+xray_tracing=$(yq -r ".Settings.xray_tracing" ${repository_path}StateMachineSettings.yml)
+echo xray_tracing : ${xray_tracing}
+
+iam_policy_document=$(yq -r ".Settings.iam_policy_document" ${repository_path}StateMachineSettings.yml)
+echo iam_policy_document : ${iam_policy_document}
+
+IFS=$'\n'; for tag in $(yq -rc ".Settings.tags[]" ${repository_path}StateMachineSettings.yml); do
+  key=$(echo ${tag} | jq -r .Key)
+  value=$(echo ${tag} | jq -r .Value)
+  tags_list+=$(echo "'${key}'"="'${value}' ")
+done
+echo tags_list : ${tags_list}
 
 # Download the AWS SAM template file from the S3 bucket
-aws s3 cp s3://$BUCKET_NAME/$SAM_FILE_NAME $SAM_FILE_NAME
+aws s3 cp s3://${bucket_name}/${sam_file_name} ${sam_file_name}
 
 cat StateMachineWorkFlow.asl.json
 
 # Move the necessary files to the AWS SAM directory
 mkdir -p sam-sfn/state_machine
 
-cp -p ${REPOSITORY_PATH}StateMachineWorkFlow.asl.json ./sam-sfn/state_machine/StateMachineWorkFlow.asl.json
-cp -p $SAM_FILE_NAME ./sam-sfn/$SAM_FILE_NAME
+cp -p ${repository_path}StateMachineWorkFlow.asl.json ./sam-sfn/state_machine/StateMachineWorkFlow.asl.json
+cp -p ${sam_file_name} ./sam-sfn/${sam_file_name}
 
-_CRON_ARRAY=$(IFS=';'; echo "${CRON_ARRAY[*]}")
-_EVENT_PATTERN_ARRAY=$(IFS=';'; echo "${EVENT_PATTERN_ARRAY[*]}")
-_EVENT_BUS_ARN_ARRAY=$(IFS=';'; echo "${EVENT_BUS_ARN_ARRAY[*]}")
-_TARGET_EVENT_BUS_ARN_ARRAY=$(IFS=';'; echo "${TARGET_EVENT_BUS_ARN_ARRAY[*]}")
+_cron_array=$(IFS=';'; echo "${cron_array[*]}")
+_event_pattern_array=$(IFS=';'; echo "${event_pattern_array[*]}")
+_event_bus_arn_array=$(IFS=';'; echo "${event_bus_arn_array[*]}")
+_target_event_bus_arn_array=$(IFS=';'; echo "${target_event_bus_arn_array[*]}")

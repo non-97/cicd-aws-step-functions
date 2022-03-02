@@ -3,126 +3,127 @@
 # -x to display the command to be executed
 set -x
 
-BUCKET_NAME="$1"
-SAM_FILE_NAME="$2"
-STATE_MACHINE_NAME="$3"
-STACK_UNIQUE_ID="$4"
+bucket_name="$1"
+sam_file_name="$2"
+state_machine_name="$3"
+stack_unique_id="$4"
 
-echo DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN : $DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN
+echo deployment_destination_account_iam_role_arn : ${deployment_destination_account_iam_role_arn}
 
-IFS=';'; CRON_ARRAY=($_CRON_ARRAY); unset IFS
-IFS=';'; EVENT_PATTERN_ARRAY=($_EVENT_PATTERN_ARRAY); unset IFS
-IFS=';'; EVENT_BUS_ARN_ARRAY=($_EVENT_BUS_ARN_ARRAY); unset IFS
-IFS=';'; TARGET_EVENT_BUS_ARN_ARRAY=($_TARGET_EVENT_BUS_ARN_ARRAY); unset IFS
+IFS=';'; cron_array=(${_cron_array}); unset IFS
+IFS=';'; event_pattern_array=(${_event_pattern_array}); unset IFS
+IFS=';'; event_bus_arn_array=(${_event_bus_arn_array}); unset IFS
+IFS=';'; target_event_bus_arn_array=(${_target_event_bus_arn_array}); unset IFS
 
-echo "${CRON_ARRAY[@]}"
-echo "${EVENT_PATTERN_ARRAY[@]}"
-echo "${EVENT_BUS_ARN_ARRAY[@]}"
-echo "${TARGET_EVENT_BUS_ARN_ARRAY[@]}"
+echo "${cron_array[@]}"
+echo "${event_pattern_array[@]}"
+echo "${event_bus_arn_array[@]}"
+echo "${target_event_bus_arn_array[@]}"
 
-echo XRAY_TRACING : $XRAY_TRACING
-echo IAM_POLICY_DOCUMENT : $IAM_POLICY_DOCUMENT
-echo TAGS_LIST : $TAGS_LIST
+echo xray_tracing : ${xray_tracing}
+echo iam_policy_document : ${iam_policy_document}
+echo tags_list : ${tags_list}
 
 cd sam-sfn
 
 ls -l ./state_machine/StateMachineWorkFlow.asl.json
 
-if [ "$DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN" != null ]; then
-  BEFORE=`aws sts get-caller-identity | jq -r .Arn`
-  OUTPUT=`aws sts assume-role --role-arn ${DEPLOYMENT_DESTINATION_ACCOUNT_IAM_ROLE_ARN} --role-session-name sam-deploy-session`
+if [[ "${deployment_destination_account_iam_role_arn}" != null ]]; then
+  before=$(aws sts get-caller-identity | jq -r .Arn)
+  output=$(aws sts assume-role --role-arn ${deployment_destination_account_iam_role_arn} --role-session-name sam-deploy-session)
 
-  AWS_ACCESS_KEY_ID=`echo $OUTPUT | jq -r .Credentials.AccessKeyId`
-  AWS_SECRET_ACCESS_KEY=`echo $OUTPUT | jq -r .Credentials.SecretAccessKey`
-  AWS_SESSION_TOKEN=`echo $OUTPUT | jq -r .Credentials.SessionToken`
+  AWS_ACCESS_KEY_ID=$(echo ${output} | jq -r .Credentials.AccessKeyId)
+  AWS_SECRET_ACCESS_KEY=$(echo ${output} | jq -r .Credentials.SecretAccessKey)
+  AWS_SESSION_TOKEN=$(echo ${output} | jq -r .Credentials.SessionToken)
 
-  AFTER=`aws sts get-caller-identity | jq -r .Arn`
+  after=$(aws sts get-caller-identity | jq -r .Arn)
 fi
 
-AWS_ACCOUNT=`aws sts get-caller-identity | jq -r .Account`
+AWS_ACCOUNT=$(aws sts get-caller-identity | jq -r .Account)
 
-if [ -s ./state_machine/StateMachineWorkFlow.asl.json ]; then
+if [[ -s ./state_machine/StateMachineWorkFlow.asl.json ]]; then
   sam build \
-    --template-file $SAM_FILE_NAME
+    --template-file ${sam_file_name}
 
   sam package \
-    --template-file $SAM_FILE_NAME \
-    --s3-bucket $BUCKET_NAME \
-    --s3-prefix ${STATE_MACHINE_NAME}_${AWS_ACCOUNT} \
+    --template-file ${sam_file_name} \
+    --s3-bucket ${bucket_name} \
+    --s3-prefix ${state_machine_name}_${AWS_ACCOUNT} \
     --output-template-file output.yml
-  
-  if [ -n "$TAGS_LIST" ]; then
+
+  if [[ -n "${tags_list}" ]]; then
+
     sam deploy \
       --template-file output.yml \
-      --s3-bucket $BUCKET_NAME \
-      --s3-prefix ${STATE_MACHINE_NAME}_${AWS_ACCOUNT} \
-      --stack-name $STATE_MACHINE_NAME \
+      --s3-bucket ${bucket_name} \
+      --s3-prefix ${state_machine_name}_${AWS_ACCOUNT} \
+      --stack-name ${state_machine_name} \
       --capabilities CAPABILITY_IAM \
       --no-fail-on-empty-changeset \
       --parameter-overrides \
-        StateMachineName=$STATE_MACHINE_NAME \
-        StackUniqueId=$STACK_UNIQUE_ID \
-        Cron1="'${CRON_ARRAY[0]}'" \
-        Cron2="'${CRON_ARRAY[1]}'" \
-        Cron3="'${CRON_ARRAY[2]}'" \
-        Cron4="'${CRON_ARRAY[3]}'" \
-        Cron5="'${CRON_ARRAY[4]}'" \
-        EventPattern1="'${EVENT_PATTERN_ARRAY[0]}'" \
-        EventPattern2="'${EVENT_PATTERN_ARRAY[1]}'" \
-        EventPattern3="'${EVENT_PATTERN_ARRAY[2]}'" \
-        EventPattern4="'${EVENT_PATTERN_ARRAY[3]}'" \
-        EventPattern5="'${EVENT_PATTERN_ARRAY[4]}'" \
-        EventBusArn1="'${EVENT_BUS_ARN_ARRAY[0]}'" \
-        EventBusArn2="'${EVENT_BUS_ARN_ARRAY[1]}'" \
-        EventBusArn3="'${EVENT_BUS_ARN_ARRAY[2]}'" \
-        EventBusArn4="'${EVENT_BUS_ARN_ARRAY[3]}'" \
-        EventBusArn5="'${EVENT_BUS_ARN_ARRAY[4]}'" \
-        TargetEventBusArn1="'${TARGET_EVENT_BUS_ARN_ARRAY[0]}'" \
-        TargetEventBusArn2="'${TARGET_EVENT_BUS_ARN_ARRAY[1]}'" \
-        TargetEventBusArn3="'${TARGET_EVENT_BUS_ARN_ARRAY[2]}'" \
-        TargetEventBusArn4="'${TARGET_EVENT_BUS_ARN_ARRAY[3]}'" \
-        TargetEventBusArn5="'${TARGET_EVENT_BUS_ARN_ARRAY[4]}'" \
-        XRayTracing=$XRAY_TRACING \
-        IamPolicyDocument="'$IAM_POLICY_DOCUMENT'" \
-      --tags "'$TAGS_LIST'"
+        StateMachineName=${state_machine_name} \
+        StackUniqueId=${stack_unique_id} \
+        Cron1="'${cron_array[0]}'" \
+        Cron2="'${cron_array[1]}'" \
+        Cron3="'${cron_array[2]}'" \
+        Cron4="'${cron_array[3]}'" \
+        Cron5="'${cron_array[4]}'" \
+        EventPattern1="'${event_pattern_array[0]}'" \
+        EventPattern2="'${event_pattern_array[1]}'" \
+        EventPattern3="'${event_pattern_array[2]}'" \
+        EventPattern4="'${event_pattern_array[3]}'" \
+        EventPattern5="'${event_pattern_array[4]}'" \
+        EventBusArn1="'${event_bus_arn_array[0]}'" \
+        EventBusArn2="'${event_bus_arn_array[1]}'" \
+        EventBusArn3="'${event_bus_arn_array[2]}'" \
+        EventBusArn4="'${event_bus_arn_array[3]}'" \
+        EventBusArn5="'${event_bus_arn_array[4]}'" \
+        TargetEventBusArn1="'${target_event_bus_arn_array[0]}'" \
+        TargetEventBusArn2="'${target_event_bus_arn_array[1]}'" \
+        TargetEventBusArn3="'${target_event_bus_arn_array[2]}'" \
+        TargetEventBusArn4="'${target_event_bus_arn_array[3]}'" \
+        TargetEventBusArn5="'${target_event_bus_arn_array[4]}'" \
+        XRayTracing=${xray_tracing} \
+        IamPolicyDocument="'${iam_policy_document}'" \
+      --tags "'${tags_list}'"
   else
     sam deploy \
       --template-file output.yml \
-      --s3-bucket $BUCKET_NAME \
-      --s3-prefix ${STATE_MACHINE_NAME}_${AWS_ACCOUNT} \
-      --stack-name $STATE_MACHINE_NAME \
+      --s3-bucket ${bucket_name} \
+      --s3-prefix ${state_machine_name}_${AWS_ACCOUNT} \
+      --stack-name ${state_machine_name} \
       --capabilities CAPABILITY_IAM \
       --no-fail-on-empty-changeset \
       --parameter-overrides \
-        StateMachineName=$STATE_MACHINE_NAME \
-        StackUniqueId=$STACK_UNIQUE_ID \
-        Cron1="'${CRON_ARRAY[0]}'" \
-        Cron2="'${CRON_ARRAY[1]}'" \
-        Cron3="'${CRON_ARRAY[2]}'" \
-        Cron4="'${CRON_ARRAY[3]}'" \
-        Cron5="'${CRON_ARRAY[4]}'" \
-        EventPattern1="'${EVENT_PATTERN_ARRAY[0]}'" \
-        EventPattern2="'${EVENT_PATTERN_ARRAY[1]}'" \
-        EventPattern3="'${EVENT_PATTERN_ARRAY[2]}'" \
-        EventPattern4="'${EVENT_PATTERN_ARRAY[3]}'" \
-        EventPattern5="'${EVENT_PATTERN_ARRAY[4]}'" \
-        EventBusArn1="'${EVENT_BUS_ARN_ARRAY[0]}'" \
-        EventBusArn2="'${EVENT_BUS_ARN_ARRAY[1]}'" \
-        EventBusArn3="'${EVENT_BUS_ARN_ARRAY[2]}'" \
-        EventBusArn4="'${EVENT_BUS_ARN_ARRAY[3]}'" \
-        EventBusArn5="'${EVENT_BUS_ARN_ARRAY[4]}'" \
-        TargetEventBusArn1="'${TARGET_EVENT_BUS_ARN_ARRAY[0]}'" \
-        TargetEventBusArn2="'${TARGET_EVENT_BUS_ARN_ARRAY[1]}'" \
-        TargetEventBusArn3="'${TARGET_EVENT_BUS_ARN_ARRAY[2]}'" \
-        TargetEventBusArn4="'${TARGET_EVENT_BUS_ARN_ARRAY[3]}'" \
-        TargetEventBusArn5="'${TARGET_EVENT_BUS_ARN_ARRAY[4]}'" \
-        XRayTracing=$XRAY_TRACING \
-        IamPolicyDocument="'$IAM_POLICY_DOCUMENT'"
+        StateMachineName=${state_machine_name} \
+        StackUniqueId=${stack_unique_id} \
+        Cron1="'${cron_array[0]}'" \
+        Cron2="'${cron_array[1]}'" \
+        Cron3="'${cron_array[2]}'" \
+        Cron4="'${cron_array[3]}'" \
+        Cron5="'${cron_array[4]}'" \
+        EventPattern1="'${event_pattern_array[0]}'" \
+        EventPattern2="'${event_pattern_array[1]}'" \
+        EventPattern3="'${event_pattern_array[2]}'" \
+        EventPattern4="'${event_pattern_array[3]}'" \
+        EventPattern5="'${event_pattern_array[4]}'" \
+        EventBusArn1="'${event_bus_arn_array[0]}'" \
+        EventBusArn2="'${event_bus_arn_array[1]}'" \
+        EventBusArn3="'${event_bus_arn_array[2]}'" \
+        EventBusArn4="'${event_bus_arn_array[3]}'" \
+        EventBusArn5="'${event_bus_arn_array[4]}'" \
+        TargetEventBusArn1="'${target_event_bus_arn_array[0]}'" \
+        TargetEventBusArn2="'${target_event_bus_arn_array[1]}'" \
+        TargetEventBusArn3="'${target_event_bus_arn_array[2]}'" \
+        TargetEventBusArn4="'${target_event_bus_arn_array[3]}'" \
+        TargetEventBusArn5="'${target_event_bus_arn_array[4]}'" \
+        XRayTracing=${xray_tracing} \
+        IamPolicyDocument="'${iam_policy_document}'"
   fi
-  aws cloudformation describe-stacks --stack-name $STATE_MACHINE_NAME
+  aws cloudformation describe-stacks --stack-name ${state_machine_name}
 else
   # If the ASL file is empty, delete the stack
   yes | \
   sam delete \
-    --stack-name $STATE_MACHINE_NAME
+    --stack-name ${state_machine_name}
 fi
