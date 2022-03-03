@@ -10,10 +10,10 @@ stack_unique_id="$4"
 
 echo deployment_destination_account_iam_role_arn : ${deployment_destination_account_iam_role_arn}
 
-IFS=';'; cron_array=(${_cron_array}); unset IFS
-IFS=';'; event_pattern_array=(${_event_pattern_array}); unset IFS
-IFS=';'; event_bus_arn_array=(${_event_bus_arn_array}); unset IFS
-IFS=';'; target_event_bus_arn_array=(${_target_event_bus_arn_array}); unset IFS
+IFS=';'; cron_array=(${tmp_cron_array}); unset IFS
+IFS=';'; event_pattern_array=(${tmp_event_pattern_array}); unset IFS
+IFS=';'; event_bus_arn_array=(${tmp_event_bus_arn_array}); unset IFS
+IFS=';'; target_event_bus_arn_array=(${tmp_target_event_bus_arn_array}); unset IFS
 
 echo "${cron_array[@]}"
 echo "${event_pattern_array[@]}"

@@ -14,121 +14,86 @@ Parameters:
     Description: Please type the Stack unique ID.
     Type: String
     Default: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  Cron0:
+    Description: Please type the Cron.
+    Type: String
+    Default: "null"
   Cron1:
     Description: Please type the Cron.
     Type: String
-    Default: cron(0 15 * * ? *)
+    Default: "null"
   Cron2:
     Description: Please type the Cron.
     Type: String
-    Default: cron(0 15 * * ? *)
+    Default: "null"
   Cron3:
     Description: Please type the Cron.
     Type: String
-    Default: cron(0 15 * * ? *)
+    Default: "null"
   Cron4:
     Description: Please type the Cron.
     Type: String
-    Default: cron(0 15 * * ? *)
-  Cron5:
-    Description: Please type the Cron.
+    Default: "null"
+  EventPattern0:
+    Description: Please type the EventPattern.
     Type: String
-    Default: cron(0 15 * * ? *)
+    Default: "null"
   EventPattern1:
     Description: Please type the EventPattern.
     Type: String
-    Default: '{
-      "source": ["aws.states"],
-      "detail-type": ["Step Functions Execution Status Change"],
-      "detail": {
-        "status": ["SUCCEEDED"],
-        "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
-      }
-    }'
+    Default: "null"
   EventPattern2:
     Description: Please type the EventPattern.
     Type: String
-    Default: '{
-      "source": ["aws.states"],
-      "detail-type": ["Step Functions Execution Status Change"],
-      "detail": {
-        "status": ["SUCCEEDED"],
-        "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
-      }
-    }'
+    Default: "null"
   EventPattern3:
     Description: Please type the EventPattern.
     Type: String
-    Default: '{
-      "source": ["aws.states"],
-      "detail-type": ["Step Functions Execution Status Change"],
-      "detail": {
-        "status": ["SUCCEEDED"],
-        "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
-      }
-    }'
+    Default: "null"
   EventPattern4:
     Description: Please type the EventPattern.
     Type: String
-    Default: '{
-      "source": ["aws.states"],
-      "detail-type": ["Step Functions Execution Status Change"],
-      "detail": {
-        "status": ["SUCCEEDED"],
-        "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
-      }
-    }'
-  EventPattern5:
-    Description: Please type the EventPattern.
+    Default: "null"
+  EventBusArn0:
+    Description: Please type the Event Bus ARN.
     Type: String
-    Default: '{
-      "source": ["aws.states"],
-      "detail-type": ["Step Functions Execution Status Change"],
-      "detail": {
-        "status": ["SUCCEEDED"],
-        "stateMachineArn": ["arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:<StateMachine Name>"]
-      }
-    }'
+    Default: "null"
   EventBusArn1:
     Description: Please type the Event Bus ARN.
     Type: String
-    Default: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   EventBusArn2:
     Description: Please type the Event Bus ARN.
     Type: String
-    Default: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   EventBusArn3:
     Description: Please type the Event Bus ARN.
     Type: String
-    Default: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   EventBusArn4:
     Description: Please type the Event Bus ARN.
     Type: String
-    Default: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
-  EventBusArn5:
-    Description: Please type the Event Bus ARN.
+    Default: "null"
+  TargetEventBusArn0:
+    Description: Please type the target event bus arn after execution.
     Type: String
-    Default: arn:aws:events:us-east-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   TargetEventBusArn1:
     Description: Please type the target event bus arn after execution.
     Type: String
-    Default: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   TargetEventBusArn2:
     Description: Please type the target event bus arn after execution.
     Type: String
-    Default: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   TargetEventBusArn3:
     Description: Please type the target event bus arn after execution.
     Type: String
-    Default: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   TargetEventBusArn4:
     Description: Please type the target event bus arn after execution.
     Type: String
-    Default: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
-  TargetEventBusArn5:
-    Description: Please type the target event bus arn after execution.
-    Type: String
-    Default: arn:aws:events:ap-northeast-1:<AWS Account ID>:event-bus/default
+    Default: "null"
   XRayTracing:
     Description: Please type the AWS X-Ray trace to enable or not.
     Type: String
@@ -139,105 +104,88 @@ Parameters:
   IamPolicyDocument:
     Description: Please type the IAM Policy Document.
     Type: String
-    Default: '{
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": [
-                    "states:DescribeStateMachine",
-                    "states:DescribeExecution",
-                    "states:ListExecutions"
-                ],
-                "Resource": [
-                    "arn:aws:states:us-east-1:<AWS Account ID>:execution:*:*",
-                    "arn:aws:states:us-east-1:<AWS Account ID>:stateMachine:*"
-                ]
-            }
-        ]
-    }'
 
 Conditions:
+  ExistsCron0: !Not 
+    - !Equals
+      - !Sub ${Cron0}
+      - "null"
   ExistsCron1: !Not 
     - !Equals
       - !Sub ${Cron1}
-      - ""
+      - "null"
   ExistsCron2: !Not 
     - !Equals
       - !Sub ${Cron2}
-      - ""
+      - "null"
   ExistsCron3: !Not 
     - !Equals
       - !Sub ${Cron3}
-      - ""
+      - "null"
   ExistsCron4: !Not 
     - !Equals
       - !Sub ${Cron4}
-      - ""
-  ExistsCron5: !Not 
+      - "null"
+  ExistsEventPattern0: !Not 
     - !Equals
-      - !Sub ${Cron5}
-      - ""
+      - !Sub ${EventPattern0}
+      - "null"
   ExistsEventPattern1: !Not 
     - !Equals
       - !Sub ${EventPattern1}
-      - ""
+      - "null"
   ExistsEventPattern2: !Not 
     - !Equals
       - !Sub ${EventPattern2}
-      - ""
+      - "null"
   ExistsEventPattern3: !Not 
     - !Equals
       - !Sub ${EventPattern3}
-      - ""
+      - "null"
   ExistsEventPattern4: !Not 
     - !Equals
       - !Sub ${EventPattern4}
-      - ""
-  ExistsEventPattern5: !Not 
+      - "null"
+  ExistsEventBusArn0: !Not 
     - !Equals
-      - !Sub ${EventPattern5}
-      - ""
+      - !Sub ${EventBusArn0}
+      - "null"
   ExistsEventBusArn1: !Not 
     - !Equals
       - !Sub ${EventBusArn1}
-      - ""
+      - "null"
   ExistsEventBusArn2: !Not 
     - !Equals
       - !Sub ${EventBusArn2}
-      - ""
+      - "null"
   ExistsEventBusArn3: !Not 
     - !Equals
       - !Sub ${EventBusArn3}
-      - ""
+      - "null"
   ExistsEventBusArn4: !Not 
     - !Equals
       - !Sub ${EventBusArn4}
-      - ""
-  ExistsEventBusArn5: !Not 
+      - "null"
+  ExistsTargetEventBusArn0: !Not 
     - !Equals
-      - !Sub ${EventBusArn5}
-      - ""
+      - !Sub ${TargetEventBusArn0}
+      - "null"
   ExistsTargetEventBusArn1: !Not 
     - !Equals
       - !Sub ${TargetEventBusArn1}
-      - ""
+      - "null"
   ExistsTargetEventBusArn2: !Not 
     - !Equals
       - !Sub ${TargetEventBusArn2}
-      - ""
+      - "null"
   ExistsTargetEventBusArn3: !Not 
     - !Equals
       - !Sub ${TargetEventBusArn3}
-      - ""
+      - "null"
   ExistsTargetEventBusArn4: !Not 
     - !Equals
       - !Sub ${TargetEventBusArn4}
-      - ""
-  ExistsTargetEventBusArn5: !Not 
-    - !Equals
-      - !Sub ${TargetEventBusArn5}
-      - ""
+      - "null"
   IsEnabledXRayTracing: !Equals
       - !Sub ${XRayTracing}
       - true
@@ -329,6 +277,17 @@ Resources:
             PolicyName: IamPolicyForExecuteStateMachine
           - !Ref AWS::NoValue
 
+  ScheduledRule0: 
+    Condition: ExistsCron0
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: ScheduledRule
+      ScheduleExpression: !Sub ${Cron0}
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref StateMachine
+          Id: !GetAtt StateMachine.Name
+          RoleArn: !GetAtt ExecuteStateMachineRole.Arn
   ScheduledRule1: 
     Condition: ExistsCron1
     Type: AWS::Events::Rule
@@ -373,18 +332,22 @@ Resources:
         - Arn: !Ref StateMachine
           Id: !GetAtt StateMachine.Name
           RoleArn: !GetAtt ExecuteStateMachineRole.Arn
-  ScheduledRule5: 
-    Condition: ExistsCron5
+
+  EventPatternRule0: 
+    Condition: ExistsEventPattern0
     Type: AWS::Events::Rule
     Properties: 
-      Description: ScheduledRule
-      ScheduleExpression: !Sub ${Cron5}
+      Description: EventPatternRule
+      EventPattern: !Sub ${EventPattern0}
+      EventBusName: !If
+        - ExistsEventBusArn0
+        - !Sub ${EventBusArn0}
+        - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default
       State: ENABLED
       Targets: 
         - Arn: !Ref StateMachine
           Id: !GetAtt StateMachine.Name
           RoleArn: !GetAtt ExecuteStateMachineRole.Arn
-
   EventPatternRule1: 
     Condition: ExistsEventPattern1
     Type: AWS::Events::Rule
@@ -445,21 +408,7 @@ Resources:
         - Arn: !Ref StateMachine
           Id: !GetAtt StateMachine.Name
           RoleArn: !GetAtt ExecuteStateMachineRole.Arn
-  EventPatternRule5: 
-    Condition: ExistsEventPattern5
-    Type: AWS::Events::Rule
-    Properties: 
-      Description: EventPatternRule
-      EventPattern: !Sub ${EventPattern5}
-      EventBusName: !If
-        - ExistsEventBusArn5
-        - !Sub ${EventBusArn5}
-        - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default
-      State: ENABLED
-      Targets: 
-        - Arn: !Ref StateMachine
-          Id: !GetAtt StateMachine.Name
-          RoleArn: !GetAtt ExecuteStateMachineRole.Arn
+
 
   ExecuteStateMachineRole: 
       Type: AWS::IAM::Role
@@ -500,9 +449,18 @@ Resources:
       }
       State: ENABLED
       Targets: 
-        - Arn: !Ref TargetEventBusArn1
-          Id: TargetEventBusArn1
-          RoleArn: !GetAtt InvokeEventBusRole1.Arn
+        - !If
+          - ExistsTargetEventBusArn0
+          - Arn: !Ref TargetEventBusArn0
+            Id: TargetEventBusArn0
+            RoleArn: !GetAtt InvokeEventBusRole0.Arn
+          - !Ref AWS::NoValue
+        - !If
+          - ExistsTargetEventBusArn1
+          - Arn: !Ref TargetEventBusArn1
+            Id: TargetEventBusArn1
+            RoleArn: !GetAtt InvokeEventBusRole1.Arn
+          - !Ref AWS::NoValue
         - !If
           - ExistsTargetEventBusArn2
           - Arn: !Ref TargetEventBusArn2
@@ -521,13 +479,31 @@ Resources:
             Id: TargetEventBusArn4
             RoleArn: !GetAtt InvokeEventBusRole4.Arn
           - !Ref AWS::NoValue
-        - !If
-          - ExistsTargetEventBusArn5
-          - Arn: !Ref TargetEventBusArn5
-            Id: TargetEventBusArn5
-            RoleArn: !GetAtt InvokeEventBusRole5.Arn
-          - !Ref AWS::NoValue
-          
+
+  InvokeEventBusRole0: 
+      Type: AWS::IAM::Role
+      Condition: ExistsTargetEventBusArn0
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - events.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: /
+        Policies:
+          - PolicyName: InvokeEventBus
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action: 
+                    - events:PutEvents
+                  Resource: 
+                    - !Ref TargetEventBusArn0
   InvokeEventBusRole1: 
       Type: AWS::IAM::Role
       Condition: ExistsTargetEventBusArn1
@@ -624,27 +600,3 @@ Resources:
                     - events:PutEvents
                   Resource: 
                     - !Ref TargetEventBusArn4
-  InvokeEventBusRole5: 
-      Type: AWS::IAM::Role
-      Condition: ExistsTargetEventBusArn5
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - events.amazonaws.com
-              Action:
-                - sts:AssumeRole
-        Path: /
-        Policies:
-          - PolicyName: InvokeEventBus
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Effect: Allow
-                  Action: 
-                    - events:PutEvents
-                  Resource: 
-                    - !Ref TargetEventBusArn5
