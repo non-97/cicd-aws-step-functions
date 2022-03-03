@@ -61,10 +61,10 @@ if [[ -s ./state_machine/StateMachineWorkFlow.asl.json ]]; then
       --parameter-overrides \
         StateMachineName=${state_machine_name} \
         StackUniqueId=${stack_unique_id} \
-        Cron_CronCount="'${cron_array[_CronCount]}'" \
-        EventPattern_EventPatternCount="'${event_pattern_array[_EventPatternCount]}'" \
-        EventBusArn_EventBusArnCount="'${event_bus_arn_array[_EventBusArnCount]}'" \
-        TargetEventBusArn_TargetEventBusArnCount="'${target_event_bus_arn_array[_TargetEventBusArnCount]}'" \
+        CronIndexCron="'${cron_array[IndexCron]}'" \
+        EventPatternIndexEventPattern="'${event_pattern_array[IndexEventPattern]}'" \
+        EventBusArnIndexEventBusArn="'${event_bus_arn_array[IndexEventBusArn]}'" \
+        TargetEventBusArnIndexTargetEventBusArn="'${target_event_bus_arn_array[IndexTargetEventBusArn]}'" \
         XRayTracing=${xray_tracing} \
         IamPolicyDocument="'${iam_policy_document}'")
 
