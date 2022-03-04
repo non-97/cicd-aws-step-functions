@@ -25,28 +25,49 @@ deployment_destination_account_iam_role_arn=$(yq -r ".Settings.deployment_destin
 echo deployment_destination_account_iam_role_arn : ${deployment_destination_account_iam_role_arn}
 
 # Get the Cron expression of the EventBridge rule associated with the State Machine
-i=0
 delimiter_text=IndexCron
+template_parameter=$(yq -r ".Parameters.Cron${delimiter_text}" ./sam-sfn/${sam_file_name})
+template_resource=$(yq -r ".Resources.ScheduledRule${delimiter_text}" ./sam-sfn/${sam_file_name})
+
+waotemplate_parameter=$(yq -r ".Parameters.Cron${delimiter_text}" ./sam-sfn/${sam_file_name})
+waotemplate_resource=$(yq -r ".Resources.ScheduledRule${delimiter_text}" ./sam-sfn/${sam_file_name})
+
+echo "template_parameter"
+echo "${template_parameter}"
+echo "template_resource"
+echo "${template_resource}"
+
+echo "waotemplate_parameter"
+echo "${waotemplate_parameter}"
+echo "waotemplate_resource"
+echo "${waotemplate_resource}"
+
+cat ./sam-sfn/${sam_file_name} | \
+  yq 'del(.Parameters.Cron'${delimiter_text}')' -Y | \
+  yq 'del(.Resources.ScheduledRule'${delimiter_text}')' -Y | \
+  tee ./sam-sfn/tmp_${sam_file_name}
+mv ./sam-sfn/tmp_${sam_file_name} ./sam-sfn/${sam_file_name}
+
+i=0
 IFS=$'\n'; for cron in $(yq -rc ".Settings.event_bridge_rule[].cron? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
   sed -i -e "/${delimiter_text}/{ h; s/${delimiter_text}/${i}/g; G; }" build_command.sh
+
+  cat ./sam-sfn/${sam_file_name} | \
+    yq --argjson object "${template_parameter}" '.Parameters += {Cron'${i}': $object}' -Y | \
+    yq --argjson object "${template_resource}" '.Resources += {ScheduledRule'${i}': $object}' -Y | \
+    sed -e 's/Cron'${delimiter_text}'/Cron'${i}'/' | \
+    tee ./sam-sfn/tmp_${sam_file_name}
+  mv ./sam-sfn/tmp_${sam_file_name} ./sam-sfn/${sam_file_name}
+
   cron_array[$((i++))]=$(echo ${cron})
 done
 sed -i "/${delimiter_text}/d" build_command.sh
 echo "${cron_array[@]}"
 
-# Get the event pattern of the EventBridge rule associated with the State Machine
-i=0
-delimiter_text=IndexEventPattern
-IFS=$'\n'; for event_pattern in $(yq -rc ".Settings.event_bridge_rule[].event_pattern? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
-  sed -i -e "/${delimiter_text}/{ h; s/${delimiter_text}/${i}/g; G; }" build_command.sh
-  event_pattern_array[$((i++))]=$(echo ${event_pattern})
-done
-sed -i "/${delimiter_text}/d" build_command.sh
-echo "${event_pattern_array[@]}"
-
 # Get the ARN of the Event Bus of the EventBridge rule event pattern associated with the State Machine
-i=0
 delimiter_text=IndexEventBusArn
+
+i=0
 IFS=$'\n'; for event_bus_arn in $(yq -rc ".Settings.event_bridge_rule[].event_bus_arn? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
   sed -i -e "/${delimiter_text}/{ h; s/${delimiter_text}/${i}/g; G; }" build_command.sh
   event_bus_arn_array[$((i++))]=$(echo ${event_bus_arn})
@@ -54,11 +75,65 @@ done
 sed -i "/${delimiter_text}/d" build_command.sh
 echo "${event_bus_arn_array[@]}"
 
-# Get the ARN of the Event Bus that puts an event when the State Machine finishes successfully
+# Get the event pattern of the EventBridge rule associated with the State Machine
+delimiter_text_event_pattern=IndexEventPattern
+delimiter_text_event_bus_arn=IndexEventBusArn
+template_parameter_event_pattern=$(yq -r ".Parameters.EventPattern${delimiter_text_event_pattern}" ./sam-sfn/${sam_file_name})
+template_parameter_event_bus_arn=$(yq -r ".Parameters.EventBusArn${delimiter_text_event_bus_arn}" ./sam-sfn/${sam_file_name})
+template_resource_event_pattern=$(yq -r ".Resources.EventPatternRule${delimiter_text_event_pattern}" ./sam-sfn/${sam_file_name})
+
+cat ./sam-sfn/${sam_file_name} | \
+  yq 'del(.Parameters.EventPattern'${delimiter_text_event_pattern}')' -Y | \
+  yq 'del(.Parameters.EventBusArn'${delimiter_text_event_bus_arn}')' -Y | \
+  yq 'del(.Resources.EventPatternRule'${delimiter_text_event_pattern}')' -Y | \
+  tee ./sam-sfn/tmp_${sam_file_name}
+mv ./sam-sfn/tmp_${sam_file_name} ./sam-sfn/${sam_file_name}
+
 i=0
+IFS=$'\n'; for event_pattern in $(yq -rc ".Settings.event_bridge_rule[].event_pattern? | select(.!=null)" ${repository_path}StateMachineSettings.yml); do
+  sed -i -e "/${delimiter_text_event_pattern}/{ h; s/${delimiter_text_event_pattern}/${i}/g; G; }" build_command.sh
+
+  cat ./sam-sfn/${sam_file_name} | \
+    yq --argjson object "${template_parameter_event_pattern}" '.Parameters += {EventPattern'${i}': $object}' -Y | \
+    yq --argjson object "${template_parameter_event_bus_arn}" '.Parameters += {EventBusArn'${i}': $object}' -Y | \
+    yq --argjson object "${template_resource_event_pattern}" '.Resources += {EventPatternRule'${i}': $object}' -Y | \
+    sed -e 's/EventPattern'${delimiter_text_event_pattern}'/EventPattern'${i}'/' | \
+    sed -e 's/EventBusArn'${delimiter_text_event_bus_arn}'/EventBusArn'${i}'/' | \
+    tee ./sam-sfn/tmp_${sam_file_name}
+  mv ./sam-sfn/tmp_${sam_file_name} ./sam-sfn/${sam_file_name}
+
+  event_pattern_array[$((i++))]=$(echo ${event_pattern})
+done
+sed -i "/${delimiter_text_event_pattern}/d" build_command.sh
+echo "${event_pattern_array[@]}"
+
+
+# Get the ARN of the Event Bus that puts an event when the State Machine finishes successfully
 delimiter_text=IndexTargetEventBusArn
+template_parameter_target_event_bus_arn=$(yq -r ".Parameters.TargetEventBusArn${delimiter_text}" ./sam-sfn/${sam_file_name})
+template_resource_target_event_bus_arn_rule=$(yq -r ".Resources.TargetEventBusArnRule${delimiter_text}" ./sam-sfn/${sam_file_name})
+template_resource_target_event_bus_arn_role=$(yq -r ".Resources.InvokeEventBusRole${delimiter_text}" ./sam-sfn/${sam_file_name})
+
+cat ./sam-sfn/${sam_file_name} | \
+  yq 'del(.Parameters.TargetEventBusArn'${delimiter_text}')' -Y | \
+  yq 'del(.Resources.TargetEventBusArnRule'${delimiter_text}')' -Y | \
+  yq 'del(.Resources.InvokeEventBusRole'${delimiter_text}')' -Y | \
+  tee ./sam-sfn/tmp_${sam_file_name}
+mv ./sam-sfn/tmp_${sam_file_name} ./sam-sfn/${sam_file_name}
+
+i=0
 IFS=$'\n'; for target_event_bus_arn in $(yq -rc ".Settings.target_event_bus_arn[]" ${repository_path}StateMachineSettings.yml); do
   sed -i -e "/${delimiter_text}/{ h; s/${delimiter_text}/${i}/g; G; }" build_command.sh
+
+  cat ./sam-sfn/${sam_file_name} | \
+    yq --argjson object "${template_parameter_target_event_bus_arn}" '.Parameters += {TargetEventBusArn'${i}': $object}' -Y | \
+    yq --argjson object "${template_resource_target_event_bus_arn_rule}" '.Resources += {TargetEventBusArnRule'${i}': $object}' -Y | \
+    yq --argjson object "${template_resource_target_event_bus_arn_role}" '.Resources += {InvokeEventBusRole'${i}': $object}' -Y | \
+    sed -e 's/TargetEventBusArn'${delimiter_text}'/TargetEventBusArn'${i}'/g' | \
+    sed -e 's/InvokeEventBusRole'${delimiter_text}'/InvokeEventBusRole'${i}'/g' | \
+    tee ./sam-sfn/tmp_${sam_file_name}
+  mv ./sam-sfn/tmp_${sam_file_name} ./sam-sfn/${sam_file_name}
+
   target_event_bus_arn_array[$((i++))]=$(echo ${target_event_bus_arn})
 done
 sed -i "/${delimiter_text}/d" build_command.sh
