@@ -14,7 +14,7 @@ export class WorkflowSupportFunctionStack extends Stack {
 
     // Lambda function to check if a StateMachine was executed on the same day
     new nodejs.NodejsFunction(this, "SameDayExecutionHistoryCheckFunction", {
-      entry: "src/lambda/functions/same-day-execution-history-check.ts",
+      entry: "src/lambda/handlers/same-day-execution-history-check.ts",
       runtime: lambda.Runtime.NODEJS_14_X,
       bundling: {
         minify: true,
@@ -58,7 +58,7 @@ export class WorkflowSupportFunctionStack extends Stack {
       this,
       "CalculateWaitingTimeForTargetTimeFunction",
       {
-        entry: "src/lambda/functions/calculate-waiting-time-for-target-time.ts",
+        entry: "src/lambda/handlers/calculate-waiting-time-for-target-time.ts",
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,

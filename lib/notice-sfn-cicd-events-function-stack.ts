@@ -21,7 +21,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
       this,
       "NoticePullRequestEventsFunction",
       {
-        entry: "src/lambda/functions/notice-pull-request-events.ts",
+        entry: "src/lambda/handlers/notice-pull-request-events.ts",
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,
@@ -67,7 +67,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
       this,
       "NoticeCodeBuildEventsFunction",
       {
-        entry: "src/lambda/functions/notice-codebuild-events.ts",
+        entry: "src/lambda/handlers/notice-codebuild-events.ts",
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,
@@ -96,7 +96,7 @@ export class NoticeSfnCicdEventsFunctionStack extends Stack {
       this,
       "NoticeExecuteStateMachineEventsFunction",
       {
-        entry: "src/lambda/functions/notice-execute-state-machine-events.ts",
+        entry: "src/lambda/handlers/notice-execute-state-machine-events.ts",
         runtime: lambda.Runtime.NODEJS_14_X,
         bundling: {
           minify: true,

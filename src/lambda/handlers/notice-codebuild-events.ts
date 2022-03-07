@@ -1,12 +1,12 @@
-import { OriginalEventBase } from "./event-bridge";
+import { OriginalEventBase } from "../aws/event-bridge";
 import {
   Field,
   SlackMessage,
   buildHeader,
   buildBody,
   postSlackMessage,
-} from "./slack";
-import { getRegion, getAWSAccount } from "./aws-utils";
+} from "../slack";
+import { getRegion, getAWSAccount } from "../aws/utils";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/sample-build-notifications.html#sample-build-notifications-ref
 interface CodeBuildOriginalEvent extends OriginalEventBase {
@@ -96,6 +96,7 @@ export const handler = async (
 
   return;
 };
+
 const sendMessageToAllSlackChannels = async (
   event: HandlerParameters,
   slackMessage: SlackMessage

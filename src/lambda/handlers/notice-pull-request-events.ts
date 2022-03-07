@@ -4,8 +4,8 @@ import {
   GetCommentsForPullRequestCommand,
 } from "@aws-sdk/client-codecommit";
 
-import { OriginalEventBase } from "./event-bridge";
-import { Header, Section, SlackMessage, postSlackMessage } from "./slack";
+import { OriginalEventBase } from "../aws/event-bridge";
+import { Header, Section, SlackMessage, postSlackMessage } from "../slack";
 
 // Ref: https://docs.aws.amazon.com/ja_jp/codecommit/latest/userguide/monitoring-events.html#pullRequestCreated
 // - commentOnPullRequestCreated Event
