@@ -1,8 +1,9 @@
+console.log("jest.config.ts");
+
 module.exports = {
-  testEnvironment: 'node',
-  roots: ['<rootDir>/test'],
-  testMatch: ['**/*.test.ts'],
+  testEnvironment: "node",
   transform: {
-    '^.+\\.tsx?$': 'ts-jest'
-  }
+    "^.+\\.tsx?$": "ts-jest",
+  },
+  setupFiles: ["./setup.jest.ts"],
 };
